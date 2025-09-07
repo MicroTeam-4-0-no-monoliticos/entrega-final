@@ -63,8 +63,6 @@ services:
       sh -c "
         echo 'Esperando a que los servicios estén listos...' &&
         sleep 15 &&
-        echo 'Ejecutando migraciones...' &&
-        alembic upgrade head &&
         echo 'Iniciando aplicación...' &&
         python -m uvicorn src.aeropartners.main:app --host 0.0.0.0 --port 8000 --reload
       "
@@ -89,20 +87,7 @@ services:
         echo 'Esperando a que los servicios estén listos...' &&
         sleep 20 &&
         echo 'Iniciando procesador de outbox con Pulsar...' &&
-        python -c '
-        import time
-        from src.aeropartners.modulos.pagos.infraestructura.outbox import PulsarOutboxProcessor
-        processor = PulsarOutboxProcessor()
-        while True:
-            try:
-                eventos = processor.procesar_eventos_pendientes()
-                if eventos > 0:
-                    print(f\"Procesados {eventos} eventos del outbox a Pulsar\")
-                time.sleep(5)
-            except Exception as e:
-                print(f\"Error en procesador de outbox: {e}\")
-                time.sleep(10)
-        '
+        python -c \"import time; from src.aeropartners.modulos.pagos.infraestructura.outbox import PulsarOutboxProcessor; processor = PulsarOutboxProcessor(); [print(f'Procesados {processor.procesar_eventos_pendientes()} eventos del outbox a Pulsar') or time.sleep(5) for _ in iter(int, 1)]\"
       "
 
   # Consumidor de eventos de Pulsar
@@ -122,11 +107,7 @@ services:
         echo 'Esperando a que Pulsar esté listo...' &&
         sleep 25 &&
         echo 'Iniciando consumidor de eventos de Pulsar...' &&
-        python -c '
-        from src.aeropartners.modulos.pagos.infraestructura.pulsar_consumer import PulsarEventConsumer
-        consumer = PulsarEventConsumer()
-        consumer.start_consuming()
-        '
+        python -c \"from src.aeropartners.modulos.pagos.infraestructura.pulsar_consumer import PulsarEventConsumer; consumer = PulsarEventConsumer(); consumer.start_consuming()\"
       "
 
 volumes:

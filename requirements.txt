@@ -11,4 +11,4 @@ pytest==8.4.0
 PyYAML==6.0.1
 python-multipart==0.0.6
 requests==2.31.0
-pulsar-client==3.6.1
+pulsar-client==3.4.0

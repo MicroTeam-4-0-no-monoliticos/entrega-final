@@ -1,9 +1,3 @@
-"""Objetos de valor reusables parte del seedwork del proyecto
-
-En este archivo usted encontrará los objetos de valor reusables parte del seedwork del proyecto
-
-"""
-
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from enum import Enum

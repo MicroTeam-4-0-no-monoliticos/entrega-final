@@ -1,9 +1,3 @@
-"""DTOs reusables parte del seedwork del proyecto
-
-En este archivo usted encontrará los DTOs reusables parte del seedwork del proyecto
-
-"""
-
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 from datetime import datetime

@@ -1,10 +1,7 @@
-"""Adaptadores de infraestructura para el módulo de pagos"""
-
 import random
 import time
-import requests
-from typing import Optional
 import uuid
+from typing import Optional
 from ..dominio.servicios import PasarelaDePagos, ResultadoPago
 from ..dominio.repositorios import RepositorioPagos
 from ..dominio.entidades import Pago
@@ -76,7 +73,7 @@ class RepositorioPagosSQLAlchemy(RepositorioPagos):
             # Agregar eventos al outbox
             for evento in pago.eventos:
                 outbox_evento = OutboxModel(
-                    id=str(uuid.uuid4()),
+                    id=uuid.uuid4(),
                     tipo_evento=type(evento).__name__,
                     datos_evento=self._serializar_evento(evento),
                     procesado=False
@@ -103,7 +100,7 @@ class RepositorioPagosSQLAlchemy(RepositorioPagos):
                 # Agregar nuevos eventos al outbox
                 for evento in pago.eventos:
                     outbox_evento = OutboxModel(
-                        id=str(uuid.uuid4()),
+                        id=uuid.uuid4(),
                         tipo_evento=type(evento).__name__,
                         datos_evento=self._serializar_evento(evento),
                         procesado=False
@@ -137,4 +134,4 @@ class RepositorioPagosSQLAlchemy(RepositorioPagos):
             "id": str(evento.id),
             "fecha_evento": evento.fecha_evento.isoformat(),
             **{k: v for k, v in evento.__dict__.items() if k not in ['id', 'fecha_evento']}
-        })
+        }, default=str)

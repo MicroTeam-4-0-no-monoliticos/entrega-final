@@ -1,7 +1,5 @@
-"""Reglas de negocio del dominio de pagos"""
-
 from ....seedwork.dominio.reglas import ReglaNegocio
-from .entidades import EstadoPago
+from .enums import EstadoPago
 
 class PagoNoPuedeSerProcesadoSiYaEstaProcesando(ReglaNegocio):
     def __init__(self, pago):

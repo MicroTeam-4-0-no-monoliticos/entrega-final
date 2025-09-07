@@ -30,6 +30,7 @@ class ProcesarPagoRequest(BaseModel):
     id_afiliado: str
     monto: float
     moneda: str
+    referencia_pago: str
 
 class ProcesarPagoResponse(BaseModel):
     id_pago: str
@@ -71,7 +72,8 @@ async def procesar_pago(
         comando = ProcesarPagoCommand(
             id_afiliado=request.id_afiliado,
             monto=request.monto,
-            moneda=request.moneda
+            moneda=request.moneda,
+            referencia_pago=request.referencia_pago
         )
         
         # Ejecutar comando

@@ -1,9 +1,3 @@
-"""Excepciones de dominio reusables parte del seedwork del proyecto
-
-En este archivo usted encontrará las excepciones de dominio reusables parte del seedwork del proyecto
-
-"""
-
 class ReglaNegocioExcepcion(Exception):
     def __init__(self, mensaje):
         self.__mensaje = mensaje

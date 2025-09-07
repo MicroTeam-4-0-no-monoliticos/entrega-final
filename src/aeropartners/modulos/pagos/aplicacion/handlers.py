@@ -22,9 +22,9 @@ class ProcesarPagoHandler(ComandoHandler):
         # Crear el agregado Pago
         dinero = Dinero(comando.monto, Moneda(comando.moneda))
         pago = Pago(
-            id=comando.id_pago,
             id_afiliado=comando.id_afiliado,
-            monto=dinero
+            monto=dinero,
+            referencia_pago=comando.referencia_pago
         )
         
         # Procesar el pago

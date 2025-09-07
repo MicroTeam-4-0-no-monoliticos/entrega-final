@@ -11,6 +11,7 @@ class ProcesarPagoCommand(Comando):
     id_afiliado: str
     monto: float
     moneda: str
+    referencia_pago: str
     id_pago: Optional[uuid.UUID] = None
 
     def __post_init__(self):

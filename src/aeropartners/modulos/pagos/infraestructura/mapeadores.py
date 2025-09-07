@@ -1,5 +1,3 @@
-"""Mapeadores entre entidades de dominio y modelos de base de datos"""
-
 from typing import Optional
 from ..dominio.entidades import Pago, EstadoPago
 from ..dominio.objetos_valor import Dinero, Moneda
@@ -14,17 +12,18 @@ class MapeadorPago:
         
         dinero = Dinero(modelo.monto, Moneda(modelo.moneda))
         
-        return Pago(
-            id=modelo.id,
+        pago = Pago(
             id_afiliado=modelo.id_afiliado,
             monto=dinero,
-            estado=EstadoPago(modelo.estado),
-            referencia_pago=modelo.referencia_pago,
-            fecha_creacion=modelo.fecha_creacion,
-            fecha_actualizacion=modelo.fecha_actualizacion,
-            fecha_procesamiento=modelo.fecha_procesamiento,
-            mensaje_error=modelo.mensaje_error
+            referencia_pago=modelo.referencia_pago
         )
+        pago.id = modelo.id
+        pago.estado = EstadoPago(modelo.estado)
+        pago.fecha_creacion = modelo.fecha_creacion
+        pago.fecha_actualizacion = modelo.fecha_actualizacion
+        pago.fecha_procesamiento = modelo.fecha_procesamiento
+        pago.mensaje_error = modelo.mensaje_error
+        return pago
     
     def dto_a_entidad(self, entidad: Pago) -> PagoModel:
         return PagoModel(

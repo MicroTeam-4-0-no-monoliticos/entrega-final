@@ -1,10 +1,8 @@
-"""Productor de eventos para Apache Pulsar"""
-
 import os
 import json
 import logging
 from typing import Dict, Any
-from pulsar import Client, Producer
+from pulsar import Client
 
 logger = logging.getLogger(__name__)
 

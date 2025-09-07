@@ -1,5 +1,3 @@
-"""Modelos de base de datos para el módulo de pagos"""
-
 from sqlalchemy import Column, String, Float, DateTime, Boolean, Text
 from sqlalchemy.dialects.postgresql import UUID
 from ....seedwork.infraestructura.db import Base

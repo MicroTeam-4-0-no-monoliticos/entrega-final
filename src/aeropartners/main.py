@@ -1,5 +1,3 @@
-"""Aplicación principal de Aeropartners"""
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .api.pagos import router as pagos_router

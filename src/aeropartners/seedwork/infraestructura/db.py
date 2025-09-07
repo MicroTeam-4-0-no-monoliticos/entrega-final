@@ -1,5 +1,3 @@
-"""Configuración de base de datos para Aeropartners"""
-
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker

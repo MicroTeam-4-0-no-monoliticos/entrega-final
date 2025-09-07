@@ -1,9 +1,3 @@
-"""Comandos reusables parte del seedwork del proyecto
-
-En este archivo usted encontrará las clases para comandos reusables parte del seedwork del proyecto
-
-"""
-
 from functools import singledispatch
 from abc import ABC, abstractmethod
 

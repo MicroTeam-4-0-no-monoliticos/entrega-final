@@ -1,9 +1,3 @@
-"""Queries reusables parte del seedwork del proyecto
-
-En este archivo usted encontrará las clases para queries reusables parte del seedwork del proyecto
-
-"""
-
 from functools import singledispatch
 from abc import ABC, abstractmethod
 from dataclasses import dataclass

@@ -1,29 +1,34 @@
-"""Entidades del dominio de pagos"""
-
 from dataclasses import dataclass, field
-from enum import Enum
 import uuid
 from datetime import datetime
 
-from ....seedwork.dominio.entidades import AgregacionRaiz
-from ....seedwork.dominio.objetos_valor import Dinero, Moneda
+from .objetos_valor import Dinero, Moneda
 from .eventos import PagoExitoso, PagoFallido
+from .enums import EstadoPago
 from .reglas import PagoNoPuedeSerProcesadoSiYaEstaProcesando, PagoNoPuedeSerProcesadoSiYaEstaExitoso, PagoNoPuedeSerProcesadoSiYaEstaFallido
 
-class EstadoPago(Enum):
-    PENDIENTE = "PENDIENTE"
-    PROCESANDO = "PROCESANDO"
-    EXITOSO = "EXITOSO"
-    FALLIDO = "FALLIDO"
+class Pago:
+    def __init__(self, id_afiliado: str, monto: Dinero, referencia_pago: str = None):
+        self.id = uuid.uuid4()
+        self.id_afiliado = id_afiliado
+        self.monto = monto
+        self.estado = EstadoPago.PENDIENTE
+        self.referencia_pago = referencia_pago or str(uuid.uuid4())
+        self.fecha_creacion = datetime.now()
+        self.fecha_actualizacion = datetime.now()
+        self.fecha_procesamiento = None
+        self.mensaje_error = None
+        self.eventos = []
 
-@dataclass
-class Pago(AgregacionRaiz):
-    id_afiliado: str
-    monto: Dinero
-    estado: EstadoPago = field(default=EstadoPago.PENDIENTE)
-    referencia_pago: str = field(default_factory=lambda: str(uuid.uuid4()))
-    fecha_procesamiento: datetime = field(default=None)
-    mensaje_error: str = field(default=None)
+    def agregar_evento(self, evento):
+        self.eventos.append(evento)
+    
+    def limpiar_eventos(self):
+        self.eventos = []
+    
+    def validar_regla(self, regla):
+        if not regla.es_valido():
+            raise Exception(regla.mensaje)
 
     def procesar(self, pasarela_pagos):
         """Procesa el pago a través de la pasarela de pagos"""

@@ -1,5 +1,3 @@
-"""Repositorios del dominio de pagos"""
-
 from abc import ABC, abstractmethod
 from typing import Optional
 import uuid

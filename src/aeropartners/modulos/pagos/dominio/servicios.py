@@ -1,5 +1,3 @@
-"""Servicios del dominio de pagos"""
-
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 

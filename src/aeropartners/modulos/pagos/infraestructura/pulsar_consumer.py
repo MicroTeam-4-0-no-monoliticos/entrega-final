@@ -1,12 +1,9 @@
-"""Consumidor de eventos de Apache Pulsar"""
-
 import os
 import json
 import logging
 import signal
-import sys
 from typing import Dict, Any, Callable
-from pulsar import Client, Consumer, Message
+from pulsar import Client, ConsumerType, InitialPosition, Message
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +12,7 @@ class PulsarEventConsumer:
     
     def __init__(self, pulsar_url: str = None, topic: str = "pagos-events", 
                  subscription_name: str = "aeropartners-consumer"):
-        self.pulsar_url = pulsar_url or os.getenv("PULSAR_URL", "pulsar://localhost:6650")
+        self.pulsar_url = pulsar_url or os.getenv("PULSAR_URL", "pulsar://pulsar:6650")
         self.topic = topic
         self.subscription_name = subscription_name
         self.client = None
@@ -44,8 +41,8 @@ class PulsarEventConsumer:
             self.consumer = self.client.subscribe(
                 self.topic,
                 subscription_name=self.subscription_name,
-                consumer_type=Consumer.Shared,
-                initial_position=Consumer.Latest
+                consumer_type=ConsumerType.Shared,
+                initial_position=InitialPosition.Latest
             )
             logger.info(f"Conectado a Pulsar en {self.pulsar_url}, topic: {self.topic}")
         except Exception as e:
