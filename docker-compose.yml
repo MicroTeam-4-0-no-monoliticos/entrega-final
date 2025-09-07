@@ -1,0 +1,134 @@
+version: '3.8'
+
+services:
+  # Base de datos PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: aeropartners-postgres
+    environment:
+      POSTGRES_DB: aeropartners
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Apache Pulsar
+  pulsar:
+    image: apachepulsar/pulsar:3.1.0
+    container_name: aeropartners-pulsar
+    command: >
+      bash -c "
+        bin/pulsar standalone --no-functions-worker --no-stream-storage
+      "
+    ports:
+      - "6650:6650"  # Pulsar service port
+      - "8080:8080"  # Pulsar admin port
+    environment:
+      PULSAR_MEM: "-Xms512m -Xmx512m -XX:MaxDirectMemorySize=1g"
+    volumes:
+      - pulsar_data:/pulsar/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/admin/v2/clusters"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # Aplicación Aeropartners
+  aeropartners:
+    build: .
+    container_name: aeropartners-app
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/aeropartners
+      PULSAR_URL: pulsar://pulsar:6650
+      PULSAR_ADMIN_URL: http://pulsar:8080
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      pulsar:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+    command: >
+      sh -c "
+        echo 'Esperando a que los servicios estén listos...' &&
+        sleep 15 &&
+        echo 'Ejecutando migraciones...' &&
+        alembic upgrade head &&
+        echo 'Iniciando aplicación...' &&
+        python -m uvicorn src.aeropartners.main:app --host 0.0.0.0 --port 8000 --reload
+      "
+
+  # Procesador de Outbox con Pulsar
+  outbox-processor:
+    build: .
+    container_name: aeropartners-outbox
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/aeropartners
+      PULSAR_URL: pulsar://pulsar:6650
+      PULSAR_ADMIN_URL: http://pulsar:8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+      pulsar:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+    command: >
+      sh -c "
+        echo 'Esperando a que los servicios estén listos...' &&
+        sleep 20 &&
+        echo 'Iniciando procesador de outbox con Pulsar...' &&
+        python -c '
+        import time
+        from src.aeropartners.modulos.pagos.infraestructura.outbox import PulsarOutboxProcessor
+        processor = PulsarOutboxProcessor()
+        while True:
+            try:
+                eventos = processor.procesar_eventos_pendientes()
+                if eventos > 0:
+                    print(f\"Procesados {eventos} eventos del outbox a Pulsar\")
+                time.sleep(5)
+            except Exception as e:
+                print(f\"Error en procesador de outbox: {e}\")
+                time.sleep(10)
+        '
+      "
+
+  # Consumidor de eventos de Pulsar
+  pulsar-consumer:
+    build: .
+    container_name: aeropartners-consumer
+    environment:
+      PULSAR_URL: pulsar://pulsar:6650
+      PULSAR_ADMIN_URL: http://pulsar:8080
+    depends_on:
+      pulsar:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+    command: >
+      sh -c "
+        echo 'Esperando a que Pulsar esté listo...' &&
+        sleep 25 &&
+        echo 'Iniciando consumidor de eventos de Pulsar...' &&
+        python -c '
+        from src.aeropartners.modulos.pagos.infraestructura.pulsar_consumer import PulsarEventConsumer
+        consumer = PulsarEventConsumer()
+        consumer.start_consuming()
+        '
+      "
+
+volumes:
+  postgres_data:
+  pulsar_data:
