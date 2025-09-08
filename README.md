@@ -62,30 +62,6 @@ El servicio implementa el escenario de procesamiento concurrente de pagos, valid
 - `ObtenerEstadoPagoQuery`: Consulta el estado actual de un pago
 - `ObtenerEstadoPagoHandler`: Retorna la información del pago
 
-## Diagrama de Secuencia del Flujo de Pago
-
-```mermaid
-sequenceDiagram
-    participant API as API Endpoint
-    participant Handler as Command Handler
-    participant Pago as Agregado Pago
-    participant Pasarela as Pasarela de Pagos
-    participant Repo as Repositorio
-    participant Outbox as Outbox
-
-    API->>Handler: ProcesarPagoCommand
-    Handler->>Pago: Crear agregado
-    Handler->>Pago: procesar(pasarela)
-    Pago->>Pasarela: procesar_pago()
-    Pasarela-->>Pago: ResultadoPago
-    Pago->>Pago: Actualizar estado
-    Pago->>Pago: Agregar evento
-    Handler->>Repo: agregar(pago)
-    Repo->>Outbox: Guardar eventos
-    Repo-->>Handler: Confirmación
-    Handler-->>API: Respuesta
-```
-
 ## Stack Tecnológico
 
 - **Lenguaje:** Python 3.11+
@@ -93,170 +69,8 @@ sequenceDiagram
 - **Base de Datos:** PostgreSQL 15
 - **ORM:** SQLAlchemy 2.0
 - **Migraciones:** Alembic
-- **Mensajería:** Apache Pulsar 3.1.0
+- **Broker de eventos:** Apache Pulsar 3.1.0
 - **Contenerización:** Docker y Docker Compose
-- **Validación:** Pydantic
-
-## Guía de Despliegue
-
-### Prerrequisitos
-
-- Docker y Docker Compose instalados
-- Git (para clonar el repositorio)
-
-### Pasos de Despliegue
-
-1. **Clonar el repositorio:**
-```bash
-git clone <repository-url>
-cd entrega-3
-```
-
-2. **Configurar variables de entorno (opcional):**
-```bash
-cp env.example .env
-# Editar .env si es necesario
-```
-
-3. **Levantar los servicios:**
-```bash
-docker-compose up -d
-```
-
-4. **Verificar que los servicios estén funcionando:**
-```bash
-docker-compose ps
-```
-
-5. **Acceder a la documentación de la API:**
-- Swagger UI: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
-
-### Servicios Incluidos
-
-- **aeropartners**: Aplicación principal (puerto 8000)
-- **postgres**: Base de datos PostgreSQL (puerto 5432)
-- **pulsar**: Apache Pulsar (puertos 6650, 8080)
-- **outbox-processor**: Procesador de eventos con Pulsar
-- **pulsar-consumer**: Consumidor de eventos de Pulsar
-
-## Uso de la API
-
-### 1. Procesar un Pago
-
-```bash
-curl -X POST "http://localhost:8000/pagos/" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "id_afiliado": "afiliado_123",
-    "monto": 100.50,
-    "moneda": "USD"
-  }'
-```
-
-**Respuesta:**
-```json
-{
-  "id_pago": "550e8400-e29b-41d4-a716-446655440000",
-  "id_afiliado": "afiliado_123",
-  "monto": 100.5,
-  "moneda": "USD",
-  "estado": "EXITOSO",
-  "referencia_pago": "ref_123456",
-  "fecha_creacion": "2024-01-01T10:00:00",
-  "mensaje": "Pago procesado exitosamente"
-}
-```
-
-### 2. Consultar Estado de un Pago
-
-```bash
-curl -X GET "http://localhost:8000/pagos/550e8400-e29b-41d4-a716-446655440000"
-```
-
-**Respuesta:**
-```json
-{
-  "id": "550e8400-e29b-41d4-a716-446655440000",
-  "id_afiliado": "afiliado_123",
-  "monto": 100.5,
-  "moneda": "USD",
-  "estado": "EXITOSO",
-  "referencia_pago": "ref_123456",
-  "fecha_creacion": "2024-01-01T10:00:00",
-  "fecha_procesamiento": "2024-01-01T10:00:05",
-  "mensaje_error": null
-}
-```
-
-### 3. Obtener Estadísticas del Outbox
-
-```bash
-curl -X GET "http://localhost:8000/pagos/outbox/estadisticas"
-```
-
-**Respuesta:**
-```json
-{
-  "total_eventos": 10,
-  "eventos_procesados": 8,
-  "eventos_pendientes": 2
-}
-```
-
-## Apache Pulsar
-
-### Configuración
-
-El microservicio incluye Apache Pulsar para el manejo robusto de eventos:
-
-- **URL de Pulsar**: `pulsar://localhost:6650`
-- **Admin URL**: `http://localhost:8080`
-- **Topic**: `pagos-events`
-- **Subscription**: `aeropartners-consumer`
-
-### Monitoreo de Pulsar
-
-Puedes acceder a la consola de administración de Pulsar en:
-- **Pulsar Admin**: http://localhost:8080
-- **Topic Stats**: http://localhost:8080/admin/v2/persistent/public/default/pagos-events/stats
-
-### Eventos Publicados
-
-El sistema publica los siguientes eventos a Pulsar:
-
-#### PagoExitoso
-```json
-{
-  "event_type": "PagoExitoso",
-  "event_id": "uuid",
-  "timestamp": "2024-01-01T10:00:00",
-  "data": {
-    "id_pago": "uuid",
-    "id_afiliado": "afiliado_123",
-    "monto": 100.50,
-    "moneda": "USD",
-    "referencia_pago": "ref_123456"
-  }
-}
-```
-
-#### PagoFallido
-```json
-{
-  "event_type": "PagoFallido",
-  "event_id": "uuid",
-  "timestamp": "2024-01-01T10:00:00",
-  "data": {
-    "id_pago": "uuid",
-    "id_afiliado": "afiliado_123",
-    "monto": 100.50,
-    "moneda": "USD",
-    "referencia_pago": "ref_123456",
-    "mensaje_error": "Fondos insuficientes"
-  }
-}
-```
 
 ## Estructura del Proyecto
 
@@ -291,33 +105,140 @@ src/aeropartners/
 └── main.py               # Punto de entrada de la aplicación
 ```
 
-## Características Técnicas
+## Guía de Ejecución
 
-### Resiliencia
-- Manejo de errores en la pasarela de pagos
-- Reintentos automáticos en el procesador de outbox
-- Validaciones de reglas de negocio
-- Durabilidad de mensajes con Apache Pulsar
-- Shutdown graceful de consumidores
+Cómo desplegar y probar las APIs del experimento.
 
-### Escalabilidad
-- Arquitectura hexagonal permite intercambiar adaptadores
-- Separación clara de responsabilidades
-- Procesamiento asíncrono de eventos
-- Múltiples consumidores de Pulsar
-- Particionado automático de topics
+### Prerrequisitos
 
-### Observabilidad
-- Logs detallados del procesamiento de eventos
-- Endpoints de monitoreo del outbox
-- Consola de administración de Pulsar
-- Métricas de throughput y latencia
-- Documentación automática de la API
+### 1.1. Instalar Docker Desktop 
 
-### Integración
-- Apache Pulsar para mensajería robusta
-- Patrón Outbox para consistencia transaccional
-- API REST con FastAPI
-- Base de datos PostgreSQL con migraciones
+Descargar de esta URL https://www.docker.com/products/docker-desktop/
 
-## Equipo: MicroTeam 4.0
+### 1.2. Instalar Colima (En caso de no poder instalar Docker Desktop)
+
+> En caso de no tener Homewbrew instalado
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+```bash
+# Instalar Colima
+brew install colima
+```
+```bash
+# Instalar docker
+brew install docker
+```
+
+
+### 2. Iniciar Colima
+
+```bash
+# Iniciar Colima
+colima start
+
+# Verificar que Docker funciona
+docker --version
+docker ps
+```
+
+## Configuración del Proyecto
+
+### 1. Navegar al directorio del proyecto
+
+```bash
+cd entrega-3
+```
+
+## Ejecución con Docker Compose
+
+### 1. Levantar todos los servicios
+
+```bash
+# Colima debe estar ejecutándose
+export PATH="/opt/homebrew/bin:$PATH"
+
+# Levantar todos los servicios
+docker-compose up -d --build
+```
+
+### 2. Verificar estado de los servicios
+
+```bash
+# Ver el estado de todos los contenedores
+docker-compose ps
+```
+
+Debería ver 5 servicios ejecutándose:
+- `aeropartners-app` (API principal)
+- `aeropartners-postgres` (Base de datos)
+- `aeropartners-pulsar` (Sistema de mensajería)
+- `aeropartners-outbox` (Procesador de eventos)
+- `aeropartners-consumer` (Consumidor de Pulsar)
+
+
+### 3. Verificar logs de inicialización
+
+```bash
+# Ver logs de la aplicación principal
+docker-compose logs aeropartners
+
+# Ver logs del procesador de outbox
+docker-compose logs outbox-processor
+
+# Ver logs del consumidor de Pulsar
+docker-compose logs pulsar-consumer
+```
+
+## Pruebas del experimento
+
+### 1. Preparar entorno de pruebas
+
+```bash
+# Activar entorno virtual
+source venv/bin/activate
+
+# Instalar dependencias desde requirements.txt
+pip install -r requirements
+```
+
+### 2. Ejecutar pruebas
+
+```bash
+# Ejecutar todas las pruebas
+python tests/test_api.py
+```
+
+### 3. Pruebas manuales con Postman
+
+Importar la colección `MicroTeam 4.0 - Entrega 3.postman_collection.json` que se encuentra en este mismo repositorio dentro de Postman. Allí encontrará los endpoints vistos en el video de presentación para realizar pruebas manuales del experimento en cuestión.
+
+
+## Monitoreo y Verificación
+
+### 1. URLs de monitoreo
+
+- **API Principal**: http://localhost:8000
+- **Documentación API**: http://localhost:8000/docs
+- **Health Check**: http://localhost:8000/health
+- **Pulsar Admin**: http://localhost:8080
+- **Estadísticas de Pulsar**: http://localhost:8080/admin/v2/persistent/public/default/pagos-events/stats
+
+### 2. Verificar base de datos
+
+```bash
+# Conectar a PostgreSQL
+docker exec -it aeropartners-postgres psql -U postgres -d aeropartners
+
+# Ver tablas
+\dt
+
+# Ver pagos
+SELECT * FROM pagos;
+
+# Ver eventos del outbox
+SELECT * FROM outbox;
+
+# Salir
+\q
+```
