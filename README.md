@@ -4,9 +4,11 @@
 
 Este microservicio implementa el **"Microservicio de Pagos"** para la plataforma "Alpes Partners", siguiendo los principios de **Domain-Driven Design (DDD)** y **Arquitectura Hexagonal**. El servicio está diseñado para manejar el procesamiento de pagos a afiliados con alta concurrencia y consistencia de datos.
 
-### Escenario de Calidad #6: Procesamiento Concurrente de Pagos
+### Escenario de Calidad #3: Procesamiento único y sin duplicados en transacciones financieras
 
-El servicio implementa el escenario de procesamiento concurrente de pagos, validando la capacidad del sistema para orquestar un alto volumen de transacciones con una pasarela de pagos externa de manera eficiente y resiliente.
+En la operación normal, los partners envían eventos de pago o conversión que, por fallas de red, pueden llegar duplicados o
+desordenados. El sistema debe procesarlos una sola vez, evitando pagos o comisiones repetidas y manteniendo la trazabilidad en
+tiempo real, incluso bajo alta carga.
 
 ## Arquitectura y Decisiones de Diseño
 
