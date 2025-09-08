@@ -1,17 +1,12 @@
-"""API endpoints para el módulo de pagos"""
-
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional
 import uuid
-from datetime import datetime
-
 from ..modulos.pagos.aplicacion.comandos import ProcesarPagoCommand
 from ..modulos.pagos.aplicacion.queries import ObtenerEstadoPagoQuery
 from ..modulos.pagos.aplicacion.handlers import ProcesarPagoHandler, ObtenerEstadoPagoHandler
 from ..modulos.pagos.infraestructura.adaptadores import RepositorioPagosSQLAlchemy, StripeAdapter
 from ..modulos.pagos.infraestructura.outbox import OutboxProcessor
-from ..seedwork.aplicacion.dto import RespuestaDTO, ErrorDTO
 
 router = APIRouter(prefix="/pagos", tags=["pagos"])
 
@@ -88,7 +83,7 @@ async def procesar_pago(
             estado=pago.estado.value,
             referencia_pago=pago.referencia_pago,
             fecha_creacion=pago.fecha_creacion.isoformat(),
-            mensaje="Pago procesado exitosamente"
+            mensaje="El pago sera procesado en poco tiempo"
         )
         
     except ValueError as e:
@@ -124,23 +119,6 @@ async def obtener_estado_pago(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error interno del servidor: {str(e)}")
 
-@router.post("/outbox/procesar")
-async def procesar_outbox(
-    outbox_processor: OutboxProcessor = Depends(get_outbox_processor)
-):
-    """
-    Procesa los eventos pendientes en el outbox
-    """
-    try:
-        eventos_procesados = outbox_processor.procesar_eventos_pendientes()
-        
-        return RespuestaDTO(
-            mensaje=f"Se procesaron {eventos_procesados} eventos del outbox",
-            datos={"eventos_procesados": eventos_procesados}
-        )
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error procesando outbox: {str(e)}")
 
 @router.get("/outbox/estadisticas", response_model=OutboxStatsResponse)
 async def obtener_estadisticas_outbox(

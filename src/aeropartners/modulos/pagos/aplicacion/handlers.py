@@ -1,16 +1,13 @@
-"""Handlers de comandos y queries de la aplicación de pagos"""
-
 from typing import Optional
-import uuid
 from ....seedwork.aplicacion.comandos import ComandoHandler
 from ....seedwork.aplicacion.queries import QueryHandler, QueryResultado
 from ....seedwork.dominio.objetos_valor import Dinero, Moneda
 from ..dominio.entidades import Pago
+from ..dominio.eventos import PagoPendiente
 from ..dominio.repositorios import RepositorioPagos
 from ..dominio.servicios import PasarelaDePagos
 from .comandos import ProcesarPagoCommand
 from .queries import ObtenerEstadoPagoQuery
-from ....seedwork.infraestructura.db import get_db
 from sqlalchemy.orm import Session
 
 class ProcesarPagoHandler(ComandoHandler):
@@ -19,7 +16,7 @@ class ProcesarPagoHandler(ComandoHandler):
         self.pasarela = pasarela
 
     def handle(self, comando: ProcesarPagoCommand):
-        # Crear el agregado Pago
+        # Crear el agregado Pago en estado PENDIENTE
         dinero = Dinero(comando.monto, Moneda(comando.moneda))
         pago = Pago(
             id_afiliado=comando.id_afiliado,
@@ -27,8 +24,14 @@ class ProcesarPagoHandler(ComandoHandler):
             referencia_pago=comando.referencia_pago
         )
         
-        # Procesar el pago
-        pago.procesar(self.pasarela)
+        # NO procesar el pago aquí, solo crear el evento para Pulsar
+        pago.agregar_evento(PagoPendiente(
+            id_pago=str(pago.id),
+            id_afiliado=pago.id_afiliado,
+            monto=pago.monto.monto,
+            moneda=pago.monto.moneda.value,
+            referencia_pago=pago.referencia_pago
+        ))
         
         # Persistir el pago y sus eventos
         self.repositorio.agregar(pago)

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 
 class Query(ABC):
-    ...
+    pass
 
 @dataclass
 class QueryResultado:

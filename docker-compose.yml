@@ -87,7 +87,8 @@ services:
         echo 'Esperando a que los servicios estén listos...' &&
         sleep 20 &&
         echo 'Iniciando procesador de outbox con Pulsar...' &&
-        python -c \"import time; from src.aeropartners.modulos.pagos.infraestructura.outbox import PulsarOutboxProcessor; processor = PulsarOutboxProcessor(); [print(f'Procesados {processor.procesar_eventos_pendientes()} eventos del outbox a Pulsar') or time.sleep(5) for _ in iter(int, 1)]\"
+  
+         python -c \"import time; from src.aeropartners.modulos.pagos.infraestructura.outbox import PulsarOutboxProcessor; processor = PulsarOutboxProcessor(); [print(f'Procesados {processor.procesar_eventos_pendientes()} eventos del outbox a Pulsar') or time.sleep(30) for _ in iter(int, 1)]\"
       "
 
   # Consumidor de eventos de Pulsar
@@ -95,9 +96,12 @@ services:
     build: .
     container_name: aeropartners-consumer
     environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/aeropartners
       PULSAR_URL: pulsar://pulsar:6650
       PULSAR_ADMIN_URL: http://pulsar:8080
     depends_on:
+      postgres:
+        condition: service_healthy
       pulsar:
         condition: service_healthy
     volumes:

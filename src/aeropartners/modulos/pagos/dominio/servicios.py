@@ -13,3 +13,4 @@ class PasarelaDePagos(ABC):
     @abstractmethod
     def procesar_pago(self, referencia: str, monto: float, moneda: str, id_afiliado: str) -> ResultadoPago:
         raise NotImplementedError()
+    

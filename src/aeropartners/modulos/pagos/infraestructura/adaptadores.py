@@ -1,7 +1,7 @@
 import random
 import time
-import uuid
 from typing import Optional
+import uuid
 from ..dominio.servicios import PasarelaDePagos, ResultadoPago
 from ..dominio.repositorios import RepositorioPagos
 from ..dominio.entidades import Pago
@@ -21,8 +21,8 @@ class StripeAdapter(PasarelaDePagos):
         Simula el procesamiento de un pago a través de Stripe
         En un escenario real, aquí se haría la llamada HTTP a la API de Stripe
         """
-        # Simular latencia de red
-        time.sleep(random.uniform(0.1, 0.5))
+        # Simular latencia de red más realista
+        time.sleep(random.uniform(2.0, 8.0))
         
         # Simular éxito/fallo aleatorio (90% éxito, 10% fallo)
         if random.random() < 0.9:

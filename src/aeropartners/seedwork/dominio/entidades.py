@@ -1,4 +1,3 @@
-
 from dataclasses import dataclass, field
 from .eventos import EventoDominio
 from .mixins import ValidarReglasMixin

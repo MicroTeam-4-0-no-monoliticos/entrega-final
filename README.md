@@ -189,24 +189,7 @@ curl -X GET "http://localhost:8000/pagos/550e8400-e29b-41d4-a716-446655440000"
 }
 ```
 
-### 3. Procesar Eventos del Outbox
-
-```bash
-curl -X POST "http://localhost:8000/pagos/outbox/procesar"
-```
-
-**Respuesta:**
-```json
-{
-  "mensaje": "Se procesaron 2 eventos del outbox",
-  "datos": {
-    "eventos_procesados": 2
-  },
-  "exitoso": true
-}
-```
-
-### 4. Obtener Estadísticas del Outbox
+### 3. Obtener Estadísticas del Outbox
 
 ```bash
 curl -X GET "http://localhost:8000/pagos/outbox/estadisticas"

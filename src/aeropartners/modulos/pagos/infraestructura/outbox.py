@@ -1,5 +1,3 @@
-"""Implementación del patrón Outbox para el procesamiento de eventos"""
-
 import json
 import os
 import logging
@@ -64,9 +62,6 @@ class OutboxProcessor:
         logger.info(f"   Datos: {json.dumps(datos, indent=2)}")
         logger.info(f"   Fecha: {evento.fecha_creacion}")
         
-        # En un escenario real, aquí se haría la publicación al bus de mensajes
-        # Por ejemplo:
-        # self.message_bus.publish(evento.tipo_evento, datos)
     
     def obtener_estadisticas(self) -> dict:
         """Obtiene estadísticas del outbox"""
@@ -108,10 +103,10 @@ class PulsarOutboxProcessor(OutboxProcessor):
                 event_id=str(evento.id)
             )
             
-            logger.info(f"✅ Evento publicado a Pulsar: {evento.tipo_evento} - {evento.id}")
+            logger.info(f"Evento publicado a Pulsar: {evento.tipo_evento} - {evento.id}")
             
         except Exception as e:
-            logger.error(f"❌ Error publicando evento a Pulsar {evento.id}: {str(e)}")
+            logger.error(f"Error publicando evento a Pulsar {evento.id}: {str(e)}")
             raise
     
     def close(self):

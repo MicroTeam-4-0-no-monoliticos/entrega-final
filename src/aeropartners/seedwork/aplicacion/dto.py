@@ -1,11 +1,9 @@
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
-from datetime import datetime
-import uuid
+from typing import Any, Dict, Optional
 
 @dataclass
 class DTO:
-    ...
+    pass
 
 @dataclass
 class RespuestaDTO(DTO):

@@ -11,7 +11,7 @@ class ReglaNegocio(ABC):
 
     @abstractmethod
     def es_valido(self) -> bool:
-        ...
+        pass
 
 class IdEntidadEsInmutable(ReglaNegocio):
     __entidad: 'Entidad'

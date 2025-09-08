@@ -1,5 +1,3 @@
-"""Comandos de la aplicación de pagos"""
-
 from dataclasses import dataclass
 from typing import Optional
 import uuid
@@ -18,7 +16,6 @@ class ProcesarPagoCommand(Comando):
         if self.id_pago is None:
             self.id_pago = uuid.uuid4()
         
-        # Validar que la moneda sea válida
         try:
             Moneda(self.moneda)
         except ValueError:

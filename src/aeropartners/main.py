@@ -32,8 +32,7 @@ async def root():
         "version": "1.0.0",
         "endpoints": {
             "procesar_pago": "POST /pagos/",
-            "obtener_estado": "GET /pagos/{id_pago}",
-            "procesar_outbox": "POST /pagos/outbox/procesar",
+            "obtener_estado": "GET /pagos/id_pago",
             "estadisticas_outbox": "GET /pagos/outbox/estadisticas"
         }
     }

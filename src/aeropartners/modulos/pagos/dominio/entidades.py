@@ -1,8 +1,6 @@
-from dataclasses import dataclass, field
 import uuid
 from datetime import datetime
-
-from .objetos_valor import Dinero, Moneda
+from .objetos_valor import Dinero
 from .eventos import PagoExitoso, PagoFallido
 from .enums import EstadoPago
 from .reglas import PagoNoPuedeSerProcesadoSiYaEstaProcesando, PagoNoPuedeSerProcesadoSiYaEstaExitoso, PagoNoPuedeSerProcesadoSiYaEstaFallido
@@ -52,24 +50,8 @@ class Pago:
             
             if resultado.exitoso:
                 self.estado = EstadoPago.EXITOSO
-                self.agregar_evento(PagoExitoso(
-                    id_pago=self.id,
-                    id_afiliado=self.id_afiliado,
-                    monto=self.monto.monto,
-                    moneda=self.monto.moneda.value,
-                    referencia_pago=self.referencia_pago
-                ))
             else:
                 self.estado = EstadoPago.FALLIDO
-                self.mensaje_error = resultado.mensaje_error
-                self.agregar_evento(PagoFallido(
-                    id_pago=self.id,
-                    id_afiliado=self.id_afiliado,
-                    monto=self.monto.monto,
-                    moneda=self.monto.moneda.value,
-                    referencia_pago=self.referencia_pago,
-                    mensaje_error=resultado.mensaje_error
-                ))
                 
         except Exception as e:
             self.estado = EstadoPago.FALLIDO

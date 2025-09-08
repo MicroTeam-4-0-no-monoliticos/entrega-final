@@ -1,5 +1,3 @@
-"""Alembic environment configuration for Aeropartners"""
-
 import sys
 import os
 from logging.config import fileConfig

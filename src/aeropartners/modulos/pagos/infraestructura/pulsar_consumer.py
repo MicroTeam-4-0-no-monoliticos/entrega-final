@@ -2,8 +2,17 @@ import os
 import json
 import logging
 import signal
+import uuid
+from datetime import datetime
 from typing import Dict, Any, Callable
-from pulsar import Client, ConsumerType, InitialPosition, Message
+import pulsar
+from pulsar import Client, Message
+
+# Dependencias de dominio/infraestructura
+from .adaptadores import RepositorioPagosSQLAlchemy, StripeAdapter
+from ..dominio.entidades import Pago
+from ..dominio.enums import EstadoPago
+from ..dominio.eventos import PagoExitoso, PagoFallido
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +21,7 @@ class PulsarEventConsumer:
     
     def __init__(self, pulsar_url: str = None, topic: str = "pagos-events", 
                  subscription_name: str = "aeropartners-consumer"):
-        self.pulsar_url = pulsar_url or os.getenv("PULSAR_URL", "pulsar://pulsar:6650")
+        self.pulsar_url = pulsar_url or os.getenv("PULSAR_URL", "pulsar://localhost:6650")
         self.topic = topic
         self.subscription_name = subscription_name
         self.client = None
@@ -21,9 +30,14 @@ class PulsarEventConsumer:
         
         # Manejadores de eventos
         self.event_handlers: Dict[str, Callable] = {
+            "PagoPendiente": self._handle_pago_pendiente,
             "PagoExitoso": self._handle_pago_exitoso,
             "PagoFallido": self._handle_pago_fallido
         }
+        
+        # Infraestructura para procesar pagos
+        self._repositorio = RepositorioPagosSQLAlchemy()
+        self._pasarela = StripeAdapter()
         
         # Configurar manejo de señales para shutdown graceful
         signal.signal(signal.SIGINT, self._signal_handler)
@@ -37,30 +51,35 @@ class PulsarEventConsumer:
     def _connect(self):
         """Establece conexión con Pulsar"""
         try:
-            self.client = Client(self.pulsar_url)
+            # Configurar cliente con timeouts más largos
+            self.client = Client(
+                self.pulsar_url,
+                operation_timeout_seconds=30,
+                connection_timeout_ms=10000
+            )
             self.consumer = self.client.subscribe(
                 self.topic,
                 subscription_name=self.subscription_name,
-                consumer_type=ConsumerType.Shared,
-                initial_position=InitialPosition.Latest
+                consumer_type=pulsar.ConsumerType.Shared,
+                initial_position=pulsar.InitialPosition.Latest
             )
             logger.info(f"Conectado a Pulsar en {self.pulsar_url}, topic: {self.topic}")
         except Exception as e:
             logger.error(f"Error conectando a Pulsar: {e}")
             raise
     
+    
     def start_consuming(self):
         """Inicia el consumo de eventos"""
         try:
             self._connect()
             self.running = True
-            
             logger.info("🚀 Iniciando consumo de eventos de Pulsar...")
             
             while self.running:
                 try:
-                    # Recibir mensaje con timeout
-                    msg = self.consumer.receive(timeout_millis=1000)
+                    # Recibir mensaje con timeout más largo
+                    msg = self.consumer.receive(timeout_millis=10000)  # 10 segundos
                     
                     if msg:
                         self._process_message(msg)
@@ -68,7 +87,9 @@ class PulsarEventConsumer:
                         
                 except Exception as e:
                     if self.running:  # Solo loggear si no estamos en shutdown
-                        logger.error(f"Error procesando mensaje: {e}")
+                        # Solo loggear errores que no sean timeout normales
+                        if "TimeOut" not in str(e) and "InvalidConfiguration" not in str(e):
+                            logger.error(f"Error procesando mensaje: {e}")
                     continue
                     
         except KeyboardInterrupt:
@@ -113,6 +134,66 @@ class PulsarEventConsumer:
             logger.error(f"Error procesando mensaje: {e}")
             raise
     
+    def _handle_pago_pendiente(self, event_data: Dict[str, Any]):
+        """Procesa un evento de PagoPendiente: ejecuta la pasarela y actualiza el agregado"""
+        try:
+            id_pago = event_data.get("id_pago")
+            referencia = event_data.get("referencia_pago")
+            monto = float(event_data.get("monto"))
+            moneda = event_data.get("moneda")
+            id_afiliado = event_data.get("id_afiliado")
+
+            logger.info(f"🔄 Procesando pago pendiente {id_pago} con referencia {referencia}")
+
+            # Cargar el agregado desde repositorio
+            pago = self._repositorio.obtener_por_id(uuid.UUID(id_pago))
+            if not pago:
+                logger.error(f"Pago {id_pago} no encontrado para procesamiento")
+                return
+
+            # Cambiar estado a PROCESANDO
+            pago.estado = EstadoPago.PROCESANDO
+            pago.fecha_procesamiento = datetime.now()
+
+            # Ejecutar pasarela de pagos
+            resultado = self._pasarela.procesar_pago(
+                referencia=referencia,
+                monto=monto,
+                moneda=moneda,
+                id_afiliado=id_afiliado
+            )
+
+            # Actualizar estado según resultado
+            if resultado.exitoso:
+                pago.estado = EstadoPago.EXITOSO
+                pago.agregar_evento(PagoExitoso(
+                    id_pago=str(pago.id),
+                    id_afiliado=pago.id_afiliado,
+                    monto=monto,
+                    moneda=moneda,
+                    referencia_pago=referencia
+                ))
+                logger.info(f"Pago {id_pago} procesado exitosamente")
+            else:
+                pago.estado = EstadoPago.FALLIDO
+                pago.mensaje_error = resultado.mensaje_error
+                pago.agregar_evento(PagoFallido(
+                    id_pago=str(pago.id),
+                    id_afiliado=pago.id_afiliado,
+                    monto=monto,
+                    moneda=moneda,
+                    referencia_pago=referencia,
+                    mensaje_error=resultado.mensaje_error
+                ))
+                logger.warning(f"Pago {id_pago} falló: {resultado.mensaje_error}")
+
+            # Persistir cambios y eventos en outbox
+            self._repositorio.actualizar(pago)
+            logger.info(f"Pago {id_pago} actualizado a estado {pago.estado.value}")
+
+        except Exception as e:
+            logger.error(f"Error procesando PagoPendiente: {e}")
+
     def _handle_pago_exitoso(self, event_data: Dict[str, Any]):
         """Maneja eventos de pago exitoso"""
         logger.info("💰 Pago exitoso procesado:")
@@ -121,26 +202,14 @@ class PulsarEventConsumer:
         logger.info(f"   Monto: {event_data.get('monto')} {event_data.get('moneda')}")
         logger.info(f"   Referencia: {event_data.get('referencia_pago')}")
         
-        # Aquí podrías implementar lógica adicional como:
-        # - Enviar notificaciones
-        # - Actualizar dashboards
-        # - Disparar otros procesos de negocio
-        # - Integrar con sistemas externos
-    
     def _handle_pago_fallido(self, event_data: Dict[str, Any]):
         """Maneja eventos de pago fallido"""
-        logger.warning("❌ Pago fallido procesado:")
+        logger.warning("    Pago fallido procesado:")
         logger.warning(f"   ID Pago: {event_data.get('id_pago')}")
         logger.warning(f"   Afiliado: {event_data.get('id_afiliado')}")
         logger.warning(f"   Monto: {event_data.get('monto')} {event_data.get('moneda')}")
         logger.warning(f"   Error: {event_data.get('mensaje_error')}")
-        
-        # Aquí podrías implementar lógica adicional como:
-        # - Enviar alertas
-        # - Programar reintentos
-        # - Notificar al equipo de soporte
-        # - Registrar en sistemas de monitoreo
-    
+            
     def add_event_handler(self, event_type: str, handler: Callable):
         """Agrega un manejador personalizado para un tipo de evento"""
         self.event_handlers[event_type] = handler

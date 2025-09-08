@@ -15,7 +15,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copiar código fuente
 COPY src/ ./src/
-COPY alembic.ini .
 COPY migrations/ ./migrations/
 
 # Crear usuario no-root
