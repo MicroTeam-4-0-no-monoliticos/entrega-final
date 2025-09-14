@@ -30,7 +30,7 @@ services:
       "
     ports:
       - "6650:6650"  # Pulsar service port
-      - "8080:8080"  # Pulsar admin port
+      - "8081:8080"  # Pulsar admin port (cambiado para evitar conflicto con proxy)
     environment:
       PULSAR_MEM: "-Xms512m -Xmx512m -XX:MaxDirectMemorySize=1g"
     volumes:
@@ -42,7 +42,7 @@ services:
       retries: 5
       start_period: 30s
 
-  # Aplicación Aeropartners
+  # Aplicación Aeropartners (Pagos)
   aeropartners:
     build: .
     container_name: aeropartners-app
@@ -67,7 +67,180 @@ services:
         python -m uvicorn src.aeropartners.main:app --host 0.0.0.0 --port 8000 --reload
       "
 
-  # Procesador de Outbox con Pulsar
+  # Servicio de Campañas - Primario
+  campaigns-svc:
+    build: .
+    container_name: campaigns-svc
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/aeropartners
+      PULSAR_URL: pulsar://pulsar:6650
+      PULSAR_ADMIN_URL: http://pulsar:8080
+      SERVICE_NAME: campaigns-svc
+      SUBSCRIPTION_TYPE: failover
+      SUBSCRIPTION_NAME: campaigns-failover
+      DLQ_TOPIC: campaigns.DLQ
+      MAX_REDELIVER_COUNT: 3
+      ACK_TIMEOUT_MILLIS: 30000
+      NEGATIVE_ACK_REDELIVERY_DELAY_MILLIS: 5000
+    ports:
+      - "8001:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      pulsar:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+    restart: always
+    command: >
+      sh -c "
+        echo 'Esperando a que los servicios estén listos...' &&
+        sleep 20 &&
+        echo 'Iniciando servicio de campañas primario...' &&
+        python -m uvicorn src.aeropartners.main:app --host 0.0.0.0 --port 8000 --reload
+      "
+
+  # Servicio de Campañas - Réplica
+  campaigns-svc-replica:
+    build: .
+    container_name: campaigns-svc-replica
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/aeropartners
+      PULSAR_URL: pulsar://pulsar:6650
+      PULSAR_ADMIN_URL: http://pulsar:8080
+      SERVICE_NAME: campaigns-svc-replica
+      SUBSCRIPTION_TYPE: failover
+      SUBSCRIPTION_NAME: campaigns-failover
+      DLQ_TOPIC: campaigns.DLQ
+      MAX_REDELIVER_COUNT: 3
+      ACK_TIMEOUT_MILLIS: 30000
+      NEGATIVE_ACK_REDELIVERY_DELAY_MILLIS: 5000
+    ports:
+      - "8002:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      pulsar:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+    restart: always
+    command: >
+      sh -c "
+        echo 'Esperando a que los servicios estén listos...' &&
+        sleep 25 &&
+        echo 'Iniciando servicio de campañas réplica...' &&
+        python -m uvicorn src.aeropartners.main:app --host 0.0.0.0 --port 8000 --reload
+      "
+
+  # Proxy de Campañas con Failover
+  campaigns-proxy:
+    build:
+      context: ./campaigns-proxy
+      dockerfile: Dockerfile
+    container_name: campaigns-proxy
+    environment:
+      PRIMARY_SERVICE_URL: http://campaigns-svc:8000
+      REPLICA_SERVICE_URL: http://campaigns-svc-replica:8000
+      HEALTH_CHECK_INTERVAL: 2
+      HEALTH_CHECK_TIMEOUT: 5
+      MAX_CONSECUTIVE_FAILURES: 3
+      PORT: 8080
+    ports:
+      - "8080:8080"  # Puerto público del proxy
+    depends_on:
+      - campaigns-svc
+      - campaigns-svc-replica
+    restart: always
+    command: python main.py
+
+  # Consumer de Campañas - Primario
+  campaigns-consumer:
+    build: .
+    container_name: campaigns-consumer
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/aeropartners
+      PULSAR_URL: pulsar://pulsar:6650
+      PULSAR_ADMIN_URL: http://pulsar:8080
+      SERVICE_NAME: campaigns-svc
+      SUBSCRIPTION_TYPE: failover
+      SUBSCRIPTION_NAME: campaigns-failover
+      DLQ_TOPIC: campaigns.DLQ
+      MAX_REDELIVER_COUNT: 3
+      ACK_TIMEOUT_MILLIS: 30000
+      NEGATIVE_ACK_REDELIVERY_DELAY_MILLIS: 5000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      pulsar:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+    restart: always
+    command: >
+      sh -c "
+        echo 'Esperando a que Pulsar esté listo...' &&
+        sleep 30 &&
+        echo 'Iniciando consumer de campañas primario...' &&
+        python -c \"from src.aeropartners.modulos.campanas.infraestructura.pulsar_consumer import PulsarCampanasConsumer; consumer = PulsarCampanasConsumer(); consumer.start_consuming()\"
+      "
+
+  # Consumer de Campañas - Réplica
+  campaigns-consumer-replica:
+    build: .
+    container_name: campaigns-consumer-replica
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/aeropartners
+      PULSAR_URL: pulsar://pulsar:6650
+      PULSAR_ADMIN_URL: http://pulsar:8080
+      SERVICE_NAME: campaigns-svc-replica
+      SUBSCRIPTION_TYPE: failover
+      SUBSCRIPTION_NAME: campaigns-failover
+      DLQ_TOPIC: campaigns.DLQ
+      MAX_REDELIVER_COUNT: 3
+      ACK_TIMEOUT_MILLIS: 30000
+      NEGATIVE_ACK_REDELIVERY_DELAY_MILLIS: 5000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      pulsar:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+    restart: always
+    command: >
+      sh -c "
+        echo 'Esperando a que Pulsar esté listo...' &&
+        sleep 35 &&
+        echo 'Iniciando consumer de campañas réplica...' &&
+        python -c \"from src.aeropartners.modulos.campanas.infraestructura.pulsar_consumer import PulsarCampanasConsumer; consumer = PulsarCampanasConsumer(); consumer.start_consuming()\"
+      "
+
+  # Procesador de Outbox - Campañas
+  campaigns-outbox-processor:
+    build: .
+    container_name: campaigns-outbox-processor
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/aeropartners
+      PULSAR_URL: pulsar://pulsar:6650
+      PULSAR_ADMIN_URL: http://pulsar:8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+      pulsar:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+    restart: always
+    command: >
+      sh -c "
+        echo 'Esperando a que los servicios estén listos...' &&
+        sleep 25 &&
+        echo 'Iniciando procesador de outbox de campañas...' &&
+        python -c \"import time; from src.aeropartners.modulos.campanas.infraestructura.outbox import OutboxCampanasProcessor; processor = OutboxCampanasProcessor(); [print(f'Procesados {processor.procesar_eventos_pendientes()} eventos del outbox de campañas a Pulsar') or time.sleep(30) for _ in iter(int, 1)]\"
+      "
+
+  # Procesador de Outbox con Pulsar (Pagos - existente)
   outbox-processor:
     build: .
     container_name: aeropartners-outbox
@@ -82,16 +255,16 @@ services:
         condition: service_healthy
     volumes:
       - ./src:/app/src
+    restart: always
     command: >
       sh -c "
         echo 'Esperando a que los servicios estén listos...' &&
         sleep 20 &&
         echo 'Iniciando procesador de outbox con Pulsar...' &&
-  
-         python -c \"import time; from src.aeropartners.modulos.pagos.infraestructura.outbox import PulsarOutboxProcessor; processor = PulsarOutboxProcessor(); [print(f'Procesados {processor.procesar_eventos_pendientes()} eventos del outbox a Pulsar') or time.sleep(30) for _ in iter(int, 1)]\"
+        python -c \"import time; from src.aeropartners.modulos.pagos.infraestructura.outbox import PulsarOutboxProcessor; processor = PulsarOutboxProcessor(); [print(f'Procesados {processor.procesar_eventos_pendientes()} eventos del outbox a Pulsar') or time.sleep(30) for _ in iter(int, 1)]\"
       "
 
-  # Consumidor de eventos de Pulsar
+  # Consumidor de eventos de Pulsar (Pagos - existente)
   pulsar-consumer:
     build: .
     container_name: aeropartners-consumer
@@ -106,6 +279,7 @@ services:
         condition: service_healthy
     volumes:
       - ./src:/app/src
+    restart: always
     command: >
       sh -c "
         echo 'Esperando a que Pulsar esté listo...' &&
