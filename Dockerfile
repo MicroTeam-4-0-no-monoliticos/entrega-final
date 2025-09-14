@@ -16,6 +16,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copiar código fuente
 COPY src/ ./src/
 COPY migrations/ ./migrations/
+COPY scripts/ ./scripts/
 
 # Crear usuario no-root
 RUN useradd --create-home --shell /bin/bash app && chown -R app:app /app
