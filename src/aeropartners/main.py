@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .api.pagos import router as pagos_router
 from .api.campanas import router as campanas_router
 from .api.reporting import router as reporting_router
+from .api.event_collector import router as event_collector_router
 from .seedwork.infraestructura.db import engine
 from .modulos.pagos.infraestructura.modelos import Base
 from .modulos.campanas.infraestructura.modelos import CampanaModel, EventInboxModel, OutboxCampanasModel
@@ -29,6 +30,7 @@ app.add_middleware(
 app.include_router(pagos_router)
 app.include_router(campanas_router)
 app.include_router(reporting_router)
+app.include_router(event_collector_router)
 
 @app.get("/")
 async def root():
@@ -58,6 +60,16 @@ async def root():
                 "actualizar_servicio": "POST /reporting/admin/servicio-datos",
                 "verificar_servicio": "GET /reporting/admin/verificar-servicio",
                 "health": "GET /reporting/health"
+            },
+            "event_collector": {
+                "procesar_evento": "POST /event-collector/events",
+                "reprocesar_fallido": "POST /event-collector/events/{id_evento}/retry",
+                "estado_evento": "GET /event-collector/events/{id_evento}/status",
+                "estadisticas": "GET /event-collector/statistics",
+                "eventos_fallidos": "GET /event-collector/failed-events",
+                "rate_limit": "GET /event-collector/rate-limit/{id_afiliado}",
+                "health": "GET /event-collector/health",
+                "ready": "GET /event-collector/ready"
             }
         }
     }

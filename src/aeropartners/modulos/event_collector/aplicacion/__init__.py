@@ -1,0 +1,1 @@
+# Aplicación del Event Collector
