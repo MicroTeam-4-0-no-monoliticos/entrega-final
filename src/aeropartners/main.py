@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from .api.pagos import router as pagos_router
 from .api.campanas import router as campanas_router
@@ -31,6 +33,11 @@ app.include_router(pagos_router)
 app.include_router(campanas_router)
 app.include_router(reporting_router)
 app.include_router(event_collector_router)
+
+# Normalizar errores de validación
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc: RequestValidationError):
+    return JSONResponse(status_code=400, content={"detail": exc.errors()})
 
 @app.get("/")
 async def root():

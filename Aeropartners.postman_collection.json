@@ -1,10 +1,10 @@
 {
 	"info": {
-		"_postman_id": "9c8404b6-babe-4a13-9648-f3f05fe5e92f",
+		"_postman_id": "77537c54-a561-4b3d-93ec-c655a978f5f9",
 		"name": "Aeropartners",
 		"description": "Colección completa para probar todos los microservicios de Aeropartners: Pagos, Campañas, Reporting y Event Collector BFF",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "33995205"
+		"_exporter_id": "43968510"
 	},
 	"item": [
 		{
@@ -733,6 +733,21 @@
 			"item": [
 				{
 					"name": "Crear Pago",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Guardar id_pago (colección)\", function () {",
+									"  const { id_pago } = pm.response.json();",
+									"  pm.collectionVariables.set(\"id_pago\", id_pago);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
 					"request": {
 						"method": "POST",
 						"header": [
@@ -760,17 +775,32 @@
 				},
 				{
 					"name": "Obtener Estado de Pago",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Guardar id_pago (colección)\", function () {",
+									"  const { id_pago } = pm.response.json();",
+									"  pm.collectionVariables.set(\"id_pago\", id_pago);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{aeropartners_url}}/pagos/{{pago_id}}",
+							"raw": "{{aeropartners_url}}/pagos/{{id_pago}}",
 							"host": [
 								"{{aeropartners_url}}"
 							],
 							"path": [
 								"pagos",
-								"{{pago_id}}"
+								"{{id_pago}}"
 							]
 						}
 					},
@@ -1236,68 +1266,94 @@
 		{
 			"key": "aeropartners_url",
 			"value": "http://localhost:8000",
-			"type": "string",
-			"description": "URL del servicio principal de Aeropartners"
+			"description": {
+				"content": "URL del servicio principal de Aeropartners",
+				"type": "text/plain"
+			}
 		},
 		{
 			"key": "event_collector_bff_url",
 			"value": "http://localhost:8090",
-			"type": "string",
-			"description": "URL del Event Collector BFF"
+			"description": {
+				"content": "URL del Event Collector BFF",
+				"type": "text/plain"
+			}
 		},
 		{
 			"key": "campaigns_primary_url",
 			"value": "http://localhost:8001",
-			"type": "string",
-			"description": "URL del servicio primario de campañas"
+			"description": {
+				"content": "URL del servicio primario de campañas",
+				"type": "text/plain"
+			}
 		},
 		{
 			"key": "campaigns_replica_url",
 			"value": "http://localhost:8002",
-			"type": "string",
-			"description": "URL del servicio réplica de campañas"
+			"description": {
+				"content": "URL del servicio réplica de campañas",
+				"type": "text/plain"
+			}
 		},
 		{
 			"key": "campaigns_proxy_url",
 			"value": "http://localhost:8080",
-			"type": "string",
-			"description": "URL del proxy de campañas con failover"
+			"description": {
+				"content": "URL del proxy de campañas con failover",
+				"type": "text/plain"
+			}
 		},
 		{
 			"key": "servicio_datos_v1_url",
 			"value": "http://localhost:9001",
-			"type": "string",
-			"description": "URL del servicio mock de datos v1"
+			"description": {
+				"content": "URL del servicio mock de datos v1",
+				"type": "text/plain"
+			}
 		},
 		{
 			"key": "servicio_datos_v2_url",
 			"value": "http://localhost:9002",
-			"type": "string",
-			"description": "URL del servicio mock de datos v2"
+			"description": {
+				"content": "URL del servicio mock de datos v2",
+				"type": "text/plain"
+			}
 		},
 		{
 			"key": "pago_id",
 			"value": "",
-			"type": "string",
-			"description": "ID del pago para pruebas (se actualiza automáticamente)"
+			"description": {
+				"content": "ID del pago para pruebas (se actualiza automáticamente)",
+				"type": "text/plain"
+			}
 		},
 		{
 			"key": "campaign_id",
 			"value": "",
-			"type": "string",
-			"description": "ID de la campaña para pruebas (se actualiza automáticamente)"
+			"description": {
+				"content": "ID de la campaña para pruebas (se actualiza automáticamente)",
+				"type": "text/plain"
+			}
 		},
 		{
 			"key": "event_id",
 			"value": "",
-			"type": "string",
-			"description": "ID del evento del BFF (se actualiza automáticamente)"
+			"description": {
+				"content": "ID del evento del BFF (se actualiza automáticamente)",
+				"type": "text/plain"
+			}
 		},
 		{
 			"key": "failed_event_id",
 			"value": "",
-			"type": "string",
-			"description": "ID del evento fallido para reprocesamiento (se actualiza automáticamente)"
+			"description": {
+				"content": "ID del evento fallido para reprocesamiento (se actualiza automáticamente)",
+				"type": "text/plain"
+			}
+		},
+		{
+			"key": "id_pago",
+			"value": ""
 		}
 	]
 }

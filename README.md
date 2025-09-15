@@ -226,11 +226,11 @@ Después del despliegue deberían estar corriendo:
 
 ## Pruebas del Sistema
 
-### 📋 Colección de Postman (Recomendado)
+### Colección de Postman (Recomendado)
 
 Para probar todos los microservicios de manera integrada, importa la colección de Postman incluida en el proyecto:
 
-**📁 Archivo:** `Aeropartners.postman_collection.json`
+**Archivo:** `Aeropartners.postman_collection.json`
 
 #### Importar la Colección:
 
