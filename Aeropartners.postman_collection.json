@@ -1,0 +1,1329 @@
+{
+	"info": {
+		"_postman_id": "bbf98875-a09a-459a-88ed-da78a236434a",
+		"name": "Aeropartners",
+		"description": "Colección completa para probar todos los microservicios de Aeropartners: Pagos, Campañas, Reporting y Event Collector BFF",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "45740584"
+	},
+	"item": [
+		{
+			"name": "Health Checks",
+			"item": [
+				{
+					"name": "Aeropartners Principal - Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{aeropartners_url}}/health",
+							"host": [
+								"{{aeropartners_url}}"
+							],
+							"path": [
+								"health"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Event Collector BFF - Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{event_collector_bff_url}}/event-collector/health",
+							"host": [
+								"{{event_collector_bff_url}}"
+							],
+							"path": [
+								"event-collector",
+								"health"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Event Collector BFF - Readiness",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{event_collector_bff_url}}/event-collector/ready",
+							"host": [
+								"{{event_collector_bff_url}}"
+							],
+							"path": [
+								"event-collector",
+								"ready"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Campañas Principal - Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{campaigns_primary_url}}/health",
+							"host": [
+								"{{campaigns_primary_url}}"
+							],
+							"path": [
+								"health"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Campañas Réplica - Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{campaigns_replica_url}}/health",
+							"host": [
+								"{{campaigns_replica_url}}"
+							],
+							"path": [
+								"health"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Proxy de Campañas - Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{campaigns_proxy_url}}/health",
+							"host": [
+								"{{campaigns_proxy_url}}"
+							],
+							"path": [
+								"health"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Servicio de Datos v1 - Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{servicio_datos_v1_url}}/health",
+							"host": [
+								"{{servicio_datos_v1_url}}"
+							],
+							"path": [
+								"health"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Servicio de Datos v2 - Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{servicio_datos_v2_url}}/health",
+							"host": [
+								"{{servicio_datos_v2_url}}"
+							],
+							"path": [
+								"health"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Event Collector BFF",
+			"item": [
+				{
+					"name": "Procesamiento de Eventos",
+					"item": [
+						{
+							"name": "Evento CLICK Básico",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "User-Agent",
+										"value": "Mozilla/5.0 (Test Browser)"
+									},
+									{
+										"key": "X-Session-ID",
+										"value": "session-{{$timestamp}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"tipo_evento\": \"CLICK\",\n  \"id_afiliado\": \"AFILIADO_001\",\n  \"fuente_evento\": \"WEB_TAG\"\n}"
+								},
+								"url": {
+									"raw": "{{event_collector_bff_url}}/event-collector/events",
+									"host": [
+										"{{event_collector_bff_url}}"
+									],
+									"path": [
+										"event-collector",
+										"events"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Evento IMPRESSION con Campaña",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "User-Agent",
+										"value": "Mozilla/5.0 (Chrome Test)"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"tipo_evento\": \"IMPRESSION\",\n  \"id_afiliado\": \"AFILIADO_002\",\n  \"id_campana\": \"123e4567-e89b-12d3-a456-426614174000\",\n  \"url\": \"https://example.com/banner\",\n  \"tipo_dispositivo\": \"DESKTOP\",\n  \"fuente_evento\": \"WEB_TAG\"\n}"
+								},
+								"url": {
+									"raw": "{{event_collector_bff_url}}/event-collector/events",
+									"host": [
+										"{{event_collector_bff_url}}"
+									],
+									"path": [
+										"event-collector",
+										"events"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Evento CONVERSION con Valor",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "User-Agent",
+										"value": "Mozilla/5.0 (Mobile Browser)"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"tipo_evento\": \"CONVERSION\",\n  \"id_afiliado\": \"AFILIADO_PREMIUM\",\n  \"id_campana\": \"987fcdeb-51a2-43d1-b456-426614174001\",\n  \"url\": \"https://shop.example.com/checkout/success\",\n  \"datos_custom\": {\n    \"order_id\": \"ORD-{{$timestamp}}\",\n    \"product_category\": \"electronics\",\n    \"customer_segment\": \"premium\"\n  },\n  \"valor_conversion\": 299.99,\n  \"moneda\": \"USD\",\n  \"tipo_dispositivo\": \"MOBILE\",\n  \"fuente_evento\": \"MOBILE_SDK\"\n}"
+								},
+								"url": {
+									"raw": "{{event_collector_bff_url}}/event-collector/events",
+									"host": [
+										"{{event_collector_bff_url}}"
+									],
+									"path": [
+										"event-collector",
+										"events"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Evento PAGE_VIEW con Tracking",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "User-Agent",
+										"value": "Mozilla/5.0 (Safari Browser)"
+									},
+									{
+										"key": "Referer",
+										"value": "https://google.com"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"tipo_evento\": \"PAGE_VIEW\",\n  \"id_afiliado\": \"AFILIADO_BASIC\",\n  \"url\": \"https://blog.example.com/article-123\",\n  \"parametros_tracking\": {\n    \"utm_source\": \"google\",\n    \"utm_medium\": \"organic\",\n    \"utm_campaign\": \"seo-campaign\"\n  },\n  \"datos_custom\": {\n    \"article_id\": \"ART-123\",\n    \"category\": \"technology\",\n    \"read_time\": \"5min\"\n  },\n  \"tipo_dispositivo\": \"DESKTOP\",\n  \"fuente_evento\": \"WEB_TAG\"\n}"
+								},
+								"url": {
+									"raw": "{{event_collector_bff_url}}/event-collector/events",
+									"host": [
+										"{{event_collector_bff_url}}"
+									],
+									"path": [
+										"event-collector",
+										"events"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Evento API Direct",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"tipo_evento\": \"CLICK\",\n  \"id_afiliado\": \"AFILIADO_API\",\n  \"api_key\": \"sk_test_123456789\",\n  \"datos_custom\": {\n    \"source\": \"api_integration\",\n    \"batch_id\": \"BATCH_{{$timestamp}}\"\n  },\n  \"fuente_evento\": \"API_DIRECT\"\n}"
+								},
+								"url": {
+									"raw": "{{event_collector_bff_url}}/event-collector/events",
+									"host": [
+										"{{event_collector_bff_url}}"
+									],
+									"path": [
+										"event-collector",
+										"events"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Evento desde Webhook",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "X-Webhook-Signature",
+										"value": "sha256=webhook_signature_hash"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"tipo_evento\": \"CONVERSION\",\n  \"id_afiliado\": \"AFILIADO_WEBHOOK\",\n  \"datos_custom\": {\n    \"webhook_source\": \"third_party_system\",\n    \"transaction_id\": \"TXN-WEBHOOK-{{$timestamp}}\"\n  },\n  \"valor_conversion\": 150.00,\n  \"moneda\": \"EUR\",\n  \"fuente_evento\": \"WEBHOOK\",\n  \"hash_validacion\": \"webhook_signature_hash\"\n}"
+								},
+								"url": {
+									"raw": "{{event_collector_bff_url}}/event-collector/events",
+									"host": [
+										"{{event_collector_bff_url}}"
+									],
+									"path": [
+										"event-collector",
+										"events"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Consultas y Estado",
+					"item": [
+						{
+							"name": "Estado de Evento Específico",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{event_collector_bff_url}}/event-collector/events/{{event_id}}/status",
+									"host": [
+										"{{event_collector_bff_url}}"
+									],
+									"path": [
+										"event-collector",
+										"events",
+										"{{event_id}}",
+										"status"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Estadísticas Generales",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{event_collector_bff_url}}/event-collector/statistics",
+									"host": [
+										"{{event_collector_bff_url}}"
+									],
+									"path": [
+										"event-collector",
+										"statistics"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Estadísticas por Afiliado",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{event_collector_bff_url}}/event-collector/statistics?id_afiliado=AFILIADO_001",
+									"host": [
+										"{{event_collector_bff_url}}"
+									],
+									"path": [
+										"event-collector",
+										"statistics"
+									],
+									"query": [
+										{
+											"key": "id_afiliado",
+											"value": "AFILIADO_001"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Estadísticas por Tipo de Evento",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{event_collector_bff_url}}/event-collector/statistics?tipo_evento=CONVERSION",
+									"host": [
+										"{{event_collector_bff_url}}"
+									],
+									"path": [
+										"event-collector",
+										"statistics"
+									],
+									"query": [
+										{
+											"key": "tipo_evento",
+											"value": "CONVERSION"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Rate Limiting",
+					"item": [
+						{
+							"name": "Estado Rate Limiting - Afiliado Básico",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{event_collector_bff_url}}/event-collector/rate-limit/AFILIADO_BASIC",
+									"host": [
+										"{{event_collector_bff_url}}"
+									],
+									"path": [
+										"event-collector",
+										"rate-limit",
+										"AFILIADO_BASIC"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Estado Rate Limiting - Afiliado Premium",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{event_collector_bff_url}}/event-collector/rate-limit/AFILIADO_PREMIUM?ventana_minutos=5",
+									"host": [
+										"{{event_collector_bff_url}}"
+									],
+									"path": [
+										"event-collector",
+										"rate-limit",
+										"AFILIADO_PREMIUM"
+									],
+									"query": [
+										{
+											"key": "ventana_minutos",
+											"value": "5"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Estado Rate Limiting - Afiliado Enterprise",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{event_collector_bff_url}}/event-collector/rate-limit/AFILIADO_ENTERPRISE",
+									"host": [
+										"{{event_collector_bff_url}}"
+									],
+									"path": [
+										"event-collector",
+										"rate-limit",
+										"AFILIADO_ENTERPRISE"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Eventos Fallidos",
+					"item": [
+						{
+							"name": "Listar Eventos Fallidos",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{event_collector_bff_url}}/event-collector/failed-events",
+									"host": [
+										"{{event_collector_bff_url}}"
+									],
+									"path": [
+										"event-collector",
+										"failed-events"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Eventos Fallidos con Límite",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{event_collector_bff_url}}/event-collector/failed-events?limite=10",
+									"host": [
+										"{{event_collector_bff_url}}"
+									],
+									"path": [
+										"event-collector",
+										"failed-events"
+									],
+									"query": [
+										{
+											"key": "limite",
+											"value": "10"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Eventos Fallidos por Afiliado",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{event_collector_bff_url}}/event-collector/failed-events?id_afiliado=AFILIADO_001&limite=5",
+									"host": [
+										"{{event_collector_bff_url}}"
+									],
+									"path": [
+										"event-collector",
+										"failed-events"
+									],
+									"query": [
+										{
+											"key": "id_afiliado",
+											"value": "AFILIADO_001"
+										},
+										{
+											"key": "limite",
+											"value": "5"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Reprocesar Evento Fallido",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"id_evento\": \"{{failed_event_id}}\",\n  \"forzar_reproceso\": false\n}"
+								},
+								"url": {
+									"raw": "{{event_collector_bff_url}}/event-collector/events/{{failed_event_id}}/retry",
+									"host": [
+										"{{event_collector_bff_url}}"
+									],
+									"path": [
+										"event-collector",
+										"events",
+										"{{failed_event_id}}",
+										"retry"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Reprocesar con Forzado",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"id_evento\": \"{{failed_event_id}}\",\n  \"forzar_reproceso\": true\n}"
+								},
+								"url": {
+									"raw": "{{event_collector_bff_url}}/event-collector/events/{{failed_event_id}}/retry",
+									"host": [
+										"{{event_collector_bff_url}}"
+									],
+									"path": [
+										"event-collector",
+										"events",
+										"{{failed_event_id}}",
+										"retry"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Casos de Error para Testing",
+					"item": [
+						{
+							"name": "Evento con ID Campaña Inválido",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"tipo_evento\": \"CLICK\",\n  \"id_afiliado\": \"AFILIADO_001\",\n  \"id_campana\": \"not-a-valid-uuid\",\n  \"fuente_evento\": \"WEB_TAG\"\n}"
+								},
+								"url": {
+									"raw": "{{event_collector_bff_url}}/event-collector/events",
+									"host": [
+										"{{event_collector_bff_url}}"
+									],
+									"path": [
+										"event-collector",
+										"events"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Evento sin Campos Requeridos",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"tipo_evento\": \"CLICK\"\n}"
+								},
+								"url": {
+									"raw": "{{event_collector_bff_url}}/event-collector/events",
+									"host": [
+										"{{event_collector_bff_url}}"
+									],
+									"path": [
+										"event-collector",
+										"events"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Conversión sin Moneda",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"tipo_evento\": \"CONVERSION\",\n  \"id_afiliado\": \"AFILIADO_001\",\n  \"valor_conversion\": 100.0\n}"
+								},
+								"url": {
+									"raw": "{{event_collector_bff_url}}/event-collector/events",
+									"host": [
+										"{{event_collector_bff_url}}"
+									],
+									"path": [
+										"event-collector",
+										"events"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Servicio de Pagos",
+			"item": [
+				{
+					"name": "Crear Pago",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Guardar id_pago (colección)\", function () {",
+									"  const { id_pago } = pm.response.json();",
+									"  pm.collectionVariables.set(\"id_pago\", id_pago);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id_afiliado\": \"afiliado_cop_{{$timestamp}}\",\n  \"monto\": 500000.00,\n  \"moneda\": \"COP\",\n  \"referencia_pago\": \"ref_cop_{{$timestamp}}\"\n}"
+						},
+						"url": {
+							"raw": "{{aeropartners_url}}/pagos/",
+							"host": [
+								"{{aeropartners_url}}"
+							],
+							"path": [
+								"pagos",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Estado de Pago",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Guardar id_pago (colección)\", function () {",
+									"  const { id_pago } = pm.response.json();",
+									"  pm.collectionVariables.set(\"id_pago\", id_pago);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{aeropartners_url}}/pagos/{{id_pago}}",
+							"host": [
+								"{{aeropartners_url}}"
+							],
+							"path": [
+								"pagos",
+								"{{id_pago}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Estadísticas del Outbox",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{aeropartners_url}}/pagos/outbox/estadisticas",
+							"host": [
+								"{{aeropartners_url}}"
+							],
+							"path": [
+								"pagos",
+								"outbox",
+								"estadisticas"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Crear Pago con Datos Inválidos (Error)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id_afiliado\": \"afiliado_error\",\n  \"monto\": -100.00,\n  \"moneda\": \"USD\",\n  \"referencia_pago\": \"ref_error\"\n}"
+						},
+						"url": {
+							"raw": "{{aeropartners_url}}/pagos/",
+							"host": [
+								"{{aeropartners_url}}"
+							],
+							"path": [
+								"pagos",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Pago Inexistente (Error)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{aeropartners_url}}/pagos/00000000-0000-0000-0000-000000000000",
+							"host": [
+								"{{aeropartners_url}}"
+							],
+							"path": [
+								"pagos",
+								"00000000-0000-0000-0000-000000000000"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Servicio de Reporting",
+			"item": [
+				{
+					"name": "Verificar Configuración Actual",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{aeropartners_url}}/reporting/admin/configuracion",
+							"host": [
+								"{{aeropartners_url}}"
+							],
+							"path": [
+								"reporting",
+								"admin",
+								"configuracion"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Cambiar a Servicio v1",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"url\": \"http://servicio-datos-v1:8000\",\n  \"version\": \"v1\"\n}"
+						},
+						"url": {
+							"raw": "{{aeropartners_url}}/reporting/admin/servicio-datos",
+							"host": [
+								"{{aeropartners_url}}"
+							],
+							"path": [
+								"reporting",
+								"admin",
+								"servicio-datos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Cambiar a Servicio v2",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"url\": \"http://servicio-datos-v2:8000\",\n  \"version\": \"v2\"\n}"
+						},
+						"url": {
+							"raw": "{{aeropartners_url}}/reporting/admin/servicio-datos",
+							"host": [
+								"{{aeropartners_url}}"
+							],
+							"path": [
+								"reporting",
+								"admin",
+								"servicio-datos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Generar Reporte - Pagos por Período",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"tipo_reporte\": \"pagos_por_periodo\",\n  \"filtros\": {\n    \"fecha_inicio\": \"2024-01-01\",\n    \"fecha_fin\": \"2024-12-31\",\n    \"moneda\": \"USD\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{aeropartners_url}}/reporting/report",
+							"host": [
+								"{{aeropartners_url}}"
+							],
+							"path": [
+								"reporting",
+								"report"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Generar Reporte - Campañas Activas",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"tipo_reporte\": \"campanas_activas\",\n  \"filtros\": {\n    \"fecha_inicio\": \"2024-01-01\",\n    \"fecha_fin\": \"2024-12-31\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{aeropartners_url}}/reporting/report",
+							"host": [
+								"{{aeropartners_url}}"
+							],
+							"path": [
+								"reporting",
+								"report"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Generar Reporte - Métricas Generales",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"tipo_reporte\": \"metricas_generales\",\n  \"filtros\": {\n    \"fecha_inicio\": \"2024-01-01\",\n    \"fecha_fin\": \"2024-12-31\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{aeropartners_url}}/reporting/report",
+							"host": [
+								"{{aeropartners_url}}"
+							],
+							"path": [
+								"reporting",
+								"report"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Servicio de Campañas",
+			"item": [
+				{
+					"name": "Proxy Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{campaigns_proxy_url}}/status",
+							"host": [
+								"{{campaigns_proxy_url}}"
+							],
+							"path": [
+								"status"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Crear Campaña",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"Campaña Promocional {{$timestamp}}\",\n  \"tipo\": \"PROMOCIONAL\",\n  \"presupuesto\": {\n    \"monto\": 1000.0,\n    \"moneda\": \"USD\"\n  },\n  \"fecha_inicio\": \"2025-09-15T00:00:00\",\n  \"fecha_fin\": \"2025-12-31T23:59:59\",\n  \"id_afiliado\": \"afiliado_campana_{{$timestamp}}\",\n  \"descripcion\": \"Campaña promocional de prueba\"\n}"
+						},
+						"url": {
+							"raw": "{{campaigns_proxy_url}}/api/campaigns/",
+							"host": [
+								"{{campaigns_proxy_url}}"
+							],
+							"path": [
+								"api",
+								"campaigns",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Campañas",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{campaigns_proxy_url}}/api/campaigns/?limit=10&offset=0",
+							"host": [
+								"{{campaigns_proxy_url}}"
+							],
+							"path": [
+								"api",
+								"campaigns",
+								""
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Campaña por ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{campaigns_proxy_url}}/api/campaigns/{{campaign_id}}",
+							"host": [
+								"{{campaigns_proxy_url}}"
+							],
+							"path": [
+								"api",
+								"campaigns",
+								"{{campaign_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Health Check de Campañas",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{campaigns_proxy_url}}/api/campaigns/health",
+							"host": [
+								"{{campaigns_proxy_url}}"
+							],
+							"path": [
+								"api",
+								"campaigns",
+								"health"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Script de pre-request para configurar variables dinámicas",
+					"pm.globals.set('timestamp', Math.floor(Date.now() / 1000));",
+					"",
+					"// Generar IDs únicos para pruebas",
+					"pm.globals.set('unique_id', pm.variables.replaceIn('{{$randomUUID}}'));",
+					"",
+					"// Log de inicio de request",
+					"console.log('Iniciando request:', pm.info.requestName);",
+					"",
+					"// Configurar event_id si no existe",
+					"if (!pm.globals.get('event_id')) {",
+					"    pm.globals.set('event_id', '550e8400-e29b-41d4-a716-446655440000');",
+					"}",
+					"",
+					"// Configurar failed_event_id si no existe",
+					"if (!pm.globals.get('failed_event_id')) {",
+					"    pm.globals.set('failed_event_id', '550e8400-e29b-41d4-a716-446655440001');",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Tests automáticos para validar respuestas",
+					"pm.test('Status code is successful', function () {",
+					"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 202, 400, 404]);",
+					"});",
+					"",
+					"pm.test('Response time is acceptable', function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(10000);",
+					"});",
+					"",
+					"pm.test('Response has valid JSON', function () {",
+					"    pm.response.to.be.json;",
+					"});",
+					"",
+					"// Extraer IDs de respuestas para usar en siguientes requests",
+					"if (pm.response.code === 200 || pm.response.code === 201) {",
+					"    try {",
+					"        var jsonData = pm.response.json();",
+					"        ",
+					"        // Extraer ID de pago",
+					"        if (jsonData.id_pago) {",
+					"            pm.globals.set('pago_id', jsonData.id_pago);",
+					"        }",
+					"        ",
+					"        // Extraer ID de campaña",
+					"        if (jsonData.id) {",
+					"            pm.globals.set('campaign_id', jsonData.id);",
+					"        }",
+					"        ",
+					"        // Extraer ID de evento del BFF",
+					"        if (jsonData.id_evento) {",
+					"            pm.globals.set('event_id', jsonData.id_evento);",
+					"        }",
+					"        ",
+					"        // Extraer ID de evento fallido",
+					"        if (jsonData.eventos_fallidos && jsonData.eventos_fallidos.length > 0) {",
+					"            pm.globals.set('failed_event_id', jsonData.eventos_fallidos[0].id_evento);",
+					"        }",
+					"    } catch (e) {",
+					"        console.log('No se pudo extraer IDs de la respuesta');",
+					"    }",
+					"}",
+					"",
+					"// Log de respuesta",
+					"console.log('Response status:', pm.response.code);",
+					"console.log('Response time:', pm.response.responseTime + 'ms');"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "aeropartners_url",
+			"value": "http://localhost:8000",
+			"description": {
+				"content": "URL del servicio principal de Aeropartners",
+				"type": "text/plain"
+			}
+		},
+		{
+			"key": "event_collector_bff_url",
+			"value": "http://localhost:8090",
+			"description": {
+				"content": "URL del Event Collector BFF",
+				"type": "text/plain"
+			}
+		},
+		{
+			"key": "campaigns_primary_url",
+			"value": "http://localhost:8001",
+			"description": {
+				"content": "URL del servicio primario de campañas",
+				"type": "text/plain"
+			}
+		},
+		{
+			"key": "campaigns_replica_url",
+			"value": "http://localhost:8002",
+			"description": {
+				"content": "URL del servicio réplica de campañas",
+				"type": "text/plain"
+			}
+		},
+		{
+			"key": "campaigns_proxy_url",
+			"value": "http://localhost:8080",
+			"description": {
+				"content": "URL del proxy de campañas con failover",
+				"type": "text/plain"
+			}
+		},
+		{
+			"key": "servicio_datos_v1_url",
+			"value": "http://localhost:9001",
+			"description": {
+				"content": "URL del servicio mock de datos v1",
+				"type": "text/plain"
+			}
+		},
+		{
+			"key": "servicio_datos_v2_url",
+			"value": "http://localhost:9002",
+			"description": {
+				"content": "URL del servicio mock de datos v2",
+				"type": "text/plain"
+			}
+		},
+		{
+			"key": "pago_id",
+			"value": "",
+			"description": {
+				"content": "ID del pago para pruebas (se actualiza automáticamente)",
+				"type": "text/plain"
+			}
+		},
+		{
+			"key": "campaign_id",
+			"value": "",
+			"description": {
+				"content": "ID de la campaña para pruebas (se actualiza automáticamente)",
+				"type": "text/plain"
+			}
+		},
+		{
+			"key": "event_id",
+			"value": "",
+			"description": {
+				"content": "ID del evento del BFF (se actualiza automáticamente)",
+				"type": "text/plain"
+			}
+		},
+		{
+			"key": "failed_event_id",
+			"value": "",
+			"description": {
+				"content": "ID del evento fallido para reprocesamiento (se actualiza automáticamente)",
+				"type": "text/plain"
+			}
+		},
+		{
+			"key": "id_pago",
+			"value": ""
+		}
+	]
+}

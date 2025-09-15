@@ -1,0 +1,14 @@
+from enum import Enum
+
+class EstadoCampana(Enum):
+    BORRADOR = "BORRADOR"
+    ACTIVA = "ACTIVA"
+    PAUSADA = "PAUSADA"
+    FINALIZADA = "FINALIZADA"
+    CANCELADA = "CANCELADA"
+
+class TipoCampana(Enum):
+    PROMOCIONAL = "PROMOCIONAL"
+    FIDELIZACION = "FIDELIZACION"
+    ADQUISICION = "ADQUISICION"
+    RETENCION = "RETENCION"

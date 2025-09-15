@@ -1,15 +1,21 @@
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from .api.pagos import router as pagos_router
+from .api.campanas import router as campanas_router
+from .api.reporting import router as reporting_router
+from .api.event_collector import router as event_collector_router
 from .seedwork.infraestructura.db import engine
 from .modulos.pagos.infraestructura.modelos import Base
+from .modulos.campanas.infraestructura.modelos import CampanaModel, EventInboxModel, OutboxCampanasModel
 
 # Crear las tablas en la base de datos
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="Aeropartners - Microservicio de Pagos",
-    description="Microservicio de pagos para la plataforma Aeropartners implementando DDD y Arquitectura Hexagonal",
+    title="Aeropartners - Microservicios",
+    description="Microservicios de pagos y campañas para la plataforma Aeropartners implementando DDD y Arquitectura Hexagonal",
     version="1.0.0"
 )
 
@@ -24,22 +30,60 @@ app.add_middleware(
 
 # Incluir routers
 app.include_router(pagos_router)
+app.include_router(campanas_router)
+app.include_router(reporting_router)
+app.include_router(event_collector_router)
+
+# Normalizar errores de validación
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc: RequestValidationError):
+    return JSONResponse(status_code=400, content={"detail": exc.errors()})
 
 @app.get("/")
 async def root():
     return {
-        "mensaje": "Bienvenido al Microservicio de Pagos de Aeropartners",
+        "mensaje": "Bienvenido a los Microservicios de Aeropartners",
         "version": "1.0.0",
-        "endpoints": {
-            "procesar_pago": "POST /pagos/",
-            "obtener_estado": "GET /pagos/id_pago",
-            "estadisticas_outbox": "GET /pagos/outbox/estadisticas"
+        "servicios": {
+            "pagos": {
+                "procesar_pago": "POST /pagos/",
+                "obtener_estado": "GET /pagos/{id_pago}",
+                "estadisticas_outbox": "GET /pagos/outbox/estadisticas"
+            },
+            "campanas": {
+                "crear_campana": "POST /campaigns/",
+                "obtener_campana": "GET /campaigns/{id_campana}",
+                "listar_campanas": "GET /campaigns/",
+                "activar_campana": "PATCH /campaigns/{id_campana}/activate",
+                "actualizar_presupuesto": "PATCH /campaigns/{id_campana}/budget",
+                "metricas": "GET /campaigns/{id_campana}/metrics",
+                "health": "GET /campaigns/health"
+            },
+            "reporting": {
+                "generar_reporte": "POST /reporting/report",
+                "obtener_reporte": "GET /reporting/report/{reporte_id}",
+                "listar_reportes": "GET /reporting/reports",
+                "configuracion": "GET /reporting/admin/configuracion",
+                "actualizar_servicio": "POST /reporting/admin/servicio-datos",
+                "verificar_servicio": "GET /reporting/admin/verificar-servicio",
+                "health": "GET /reporting/health"
+            },
+            "event_collector": {
+                "procesar_evento": "POST /event-collector/events",
+                "reprocesar_fallido": "POST /event-collector/events/{id_evento}/retry",
+                "estado_evento": "GET /event-collector/events/{id_evento}/status",
+                "estadisticas": "GET /event-collector/statistics",
+                "eventos_fallidos": "GET /event-collector/failed-events",
+                "rate_limit": "GET /event-collector/rate-limit/{id_afiliado}",
+                "health": "GET /event-collector/health",
+                "ready": "GET /event-collector/ready"
+            }
         }
     }
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "service": "aeropartners-pagos"}
+    return {"status": "healthy", "service": "aeropartners-microservices"}
 
 if __name__ == "__main__":
     import uvicorn

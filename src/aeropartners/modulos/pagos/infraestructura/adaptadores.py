@@ -21,7 +21,6 @@ class StripeAdapter(PasarelaDePagos):
         Simula el procesamiento de un pago a través de Stripe
         En un escenario real, aquí se haría la llamada HTTP a la API de Stripe
         """
-        # Simular latencia de red más realista
         time.sleep(random.uniform(2.0, 8.0))
         
         # Simular éxito/fallo aleatorio (90% éxito, 10% fallo)

@@ -1,0 +1,1 @@
+# Infraestructura del Event Collector
