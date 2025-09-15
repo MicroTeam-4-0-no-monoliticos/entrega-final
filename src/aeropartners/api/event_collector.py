@@ -15,11 +15,7 @@ from ..modulos.event_collector.aplicacion.handlers import (
     ObtenerEstadoEventoHandler, ObtenerEstadisticasProcessingHandler,
     ObtenerEventosFallidosHandler, ObtenerRateLimitStatusHandler
 )
-from ..modulos.event_collector.factory import (
-    get_procesar_evento_handler, get_retry_handler,
-    get_estado_evento_handler, get_estadisticas_handler,
-    get_eventos_fallidos_handler, get_rate_limit_status_handler
-)
+from ..modulos.event_collector import factory as ec_factory
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/event-collector", tags=["Event Collector BFF"])
@@ -79,10 +75,10 @@ async def get_request_metadata(request: Request) -> Dict[str, Any]:
 @router.post("/events", response_model=EventoTrackingResponse, status_code=201)
 async def procesar_evento_tracking(
     evento_request: EventoTrackingRequest,
-    request_metadata: Dict[str, Any] = Depends(get_request_metadata),
-    handler: ProcesarEventoTrackingHandler = Depends(get_procesar_evento_handler)
+    request_metadata: Dict[str, Any] = Depends(get_request_metadata)
 ):
     try:
+        handler: ProcesarEventoTrackingHandler = ec_factory.get_procesar_evento_handler()
         comando = ProcesarEventoTrackingCommand(
             tipo_evento=evento_request.tipo_evento.upper(),
             id_afiliado=evento_request.id_afiliado,
@@ -143,10 +139,10 @@ async def procesar_evento_tracking(
 @router.post("/events/{id_evento}/retry", response_model=EventoTrackingResponse)
 async def reprocesar_evento_fallido(
     id_evento: str,
-    request: ReprocesarEventoRequest,
-    handler: ReprocesarEventoFallidoHandler = Depends(get_retry_handler)
+    request: ReprocesarEventoRequest
 ):
     try:
+        handler: ReprocesarEventoFallidoHandler = ec_factory.get_retry_handler()
         comando = ReprocesarEventoFallidoCommand(
             id_evento=id_evento,
             forzar_reproceso=request.forzar_reproceso
@@ -166,10 +162,10 @@ async def reprocesar_evento_fallido(
 
 @router.get("/events/{id_evento}/status")
 async def obtener_estado_evento(
-    id_evento: str,
-    handler: ObtenerEstadoEventoHandler = Depends(get_estado_evento_handler)
+    id_evento: str
 ):
     try:
+        handler: ObtenerEstadoEventoHandler = ec_factory.get_estado_evento_handler()
         query = ObtenerEstadoEventoQuery(id_evento=id_evento)
         resultado = await handler.handle(query)
         return resultado
@@ -184,9 +180,9 @@ async def obtener_estadisticas_processing(
     desde: Optional[datetime] = None,
     hasta: Optional[datetime] = None,
     tipo_evento: Optional[str] = None,
-    handler: ObtenerEstadisticasProcessingHandler = Depends(get_estadisticas_handler)
 ):
     try:
+        handler: ObtenerEstadisticasProcessingHandler = ec_factory.get_estadisticas_handler()
         query = ObtenerEstadisticasProcessingQuery(
             id_afiliado=id_afiliado,
             desde=desde,
@@ -207,9 +203,9 @@ async def obtener_eventos_fallidos(
     desde: Optional[datetime] = None,
     limite: int = 100,
     solo_reintentables: bool = True,
-    handler: ObtenerEventosFallidosHandler = Depends(get_eventos_fallidos_handler)
 ):
     try:
+        handler: ObtenerEventosFallidosHandler = ec_factory.get_eventos_fallidos_handler()
         query = ObtenerEventosFallidosQuery(
             id_afiliado=id_afiliado,
             desde=desde,
@@ -228,9 +224,9 @@ async def obtener_eventos_fallidos(
 async def obtener_rate_limit_status(
     id_afiliado: str,
     ventana_minutos: int = 1,
-    handler: ObtenerRateLimitStatusHandler = Depends(get_rate_limit_status_handler)
 ):
     try:
+        handler: ObtenerRateLimitStatusHandler = ec_factory.get_rate_limit_status_handler()
         query = ObtenerRateLimitStatusQuery(
             id_afiliado=id_afiliado,
             ventana_minutos=ventana_minutos

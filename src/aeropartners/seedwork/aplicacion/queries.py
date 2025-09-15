@@ -1,10 +1,11 @@
 from functools import singledispatch
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import datetime
 
 
 class Query(ABC):
-    pass
+    fecha_creacion: datetime = field(default_factory=datetime.now, kw_only=True)
 
 @dataclass
 class QueryResultado:

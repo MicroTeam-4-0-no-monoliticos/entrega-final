@@ -144,15 +144,17 @@ class ServicioFormateadorEventos:
             'id_evento': id_evento,
             'tipo_evento': tipo_evento.value,
             'timestamp': timestamp.isoformat(),
-            'id_afiliado': contexto.id_afiliado,
-            'id_campana': contexto.id_campana,
-            'id_oferta': contexto.id_oferta,
-            'url': contexto.url,
-            'parametros_tracking': contexto.parametros_tracking or {},
+            'contexto': {
+                'id_afiliado': contexto.id_afiliado,
+                'id_campana': contexto.id_campana,
+                'id_oferta': contexto.id_oferta,
+                'url': contexto.url,
+                'parametros_tracking': contexto.parametros_tracking or {},
+            },
             'payload': {
                 'datos_custom': payload.datos_custom,
                 'valor_conversion': payload.valor_conversion,
                 'moneda': payload.moneda
             },
-            'metadatos': metadatos_sistema
+            'metadatos_sistema': metadatos_sistema
         }

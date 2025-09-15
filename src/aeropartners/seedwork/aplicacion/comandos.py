@@ -1,8 +1,11 @@
 from functools import singledispatch
 from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
+from datetime import datetime
 
+@dataclass
 class Comando:
-    pass
+    fecha_creacion: datetime = field(default_factory=datetime.now, kw_only=True)
 
 class ComandoHandler(ABC):
     @abstractmethod
