@@ -17,7 +17,7 @@ El servicio de reportes permite cambiar entre versiones (v1 simple, v2 detallada
 
 ## Arquitectura y Componentes
 
-### 1. 💰 Microservicio de Pagos
+### 1. Microservicio de Pagos
 
 **Bounded Context:** Procesamiento de pagos a afiliados
 
@@ -34,7 +34,7 @@ El servicio de reportes permite cambiar entre versiones (v1 simple, v2 detallada
 - `PasarelaDePagos` (Puerto): Interfaz para pasarelas externas
 - `StripeAdapter` (Adaptador): Implementación con simulación de latencia y fallos
 
-### 2. 📢 Microservicio de Campañas
+### 2. Microservicio de Campañas
 
 **Bounded Context:** Gestión de campañas publicitarias
 
@@ -49,7 +49,7 @@ El servicio de reportes permite cambiar entre versiones (v1 simple, v2 detallada
 - Consumer pattern para procesamiento de eventos
 - Outbox pattern para consistencia eventual
 
-### 3. 📊 Servicio de Reportes
+### 3. Servicio de Reportes
 
 **Bounded Context:** Reporting y analytics en tiempo real
 
@@ -67,7 +67,7 @@ El servicio de reportes permite cambiar entre versiones (v1 simple, v2 detallada
 - `payments.evt.pending/completed/failed`
 - `campaigns.evt.created/activated/updated`
 
-### 4. 🔄 Event Collector BFF
+### 4. Event Collector BFF
 
 **Bounded Context:** Backend for Frontend para recolección de eventos
 
@@ -92,20 +92,21 @@ El servicio de reportes permite cambiar entre versiones (v1 simple, v2 detallada
 
 ```
 src/aeropartners/
-├── api/                    # Capa de presentación (FastAPI)
-│   ├── pagos.py           # Endpoints de pagos
-│   ├── campanas.py        # Endpoints de campañas
-│   └── reportes.py        # 🆕 Endpoints de reportes
+├── api/                    # Capa de presentación
+│   ├── pagos.py           
+│   ├── campanas.py 
+│   ├── event_collector.py        
+│   └── reportes.py        
 ├── modulos/
-│   ├── pagos/             # 💰 Bounded context de pagos
-│   │   ├── aplicacion/    # CQS (comandos, queries, handlers)
-│   │   ├── dominio/       # DDD (entidades, eventos, reglas)
+│   ├── pagos/               # Bounded context de pagos
+│   │   ├── aplicacion/      # CQS (comandos, queries, handlers)
+│   │   ├── dominio/         # DDD (entidades, eventos, reglas)
 │   │   └── infraestructura/ # Adaptadores, outbox, consumer
-│   ├── campanas/          # 📢 Bounded context de campañas
+│   ├── campanas/            # Bounded context de campañas
 │   │   ├── aplicacion/
 │   │   ├── dominio/
 │   │   └── infraestructura/
-│   └── reportes/          # 📊 Bounded context de reportes
+│   └── reportes/          # Bounded context de reportes
 │       ├── aplicacion/
 │       │   ├── queries.py
 │       │   └── handlers_v1_v2.py
