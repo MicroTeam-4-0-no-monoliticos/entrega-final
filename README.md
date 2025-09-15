@@ -132,7 +132,7 @@ El sistema despliega los siguientes contenedores:
 |----------|--------|-------------|
 | `aeropartners-app` | 8000 | API principal (FastAPI) |
 | `campaigns-proxy` | 8080 | Proxy con failover para campañas |
-| `event-collector-bff` | 8090 | 🆕 BFF para recolección de eventos |
+| `event-collector-bff` | 8090 | BFF para recolección de eventos |
 | `campaigns-svc` | 8001 | Servicio de campañas primario |
 | `campaigns-svc-replica` | 8002 | Servicio de campañas réplica |
 | `servicio-datos-v1` | 9001 | Mock service v1 |
@@ -145,13 +145,13 @@ El sistema despliega los siguientes contenedores:
 ### 💰 API de Pagos
 ```
 POST /pagos/                    # Procesar nuevo pago
-GET  /pagos/{id_pago}          # Obtener estado del pago
+GET  /pagos/{id_pago}           # Obtener estado del pago
 GET  /pagos/outbox/estadisticas # Estadísticas del outbox
 ```
 
 ### 📢 API de Campañas
 ```
-POST /campaigns/                # Crear campaña
+POST /campaigns/               # Crear campaña
 GET  /campaigns/               # Listar campañas
 GET  /campaigns/{id}           # Obtener campaña específica
 PATCH /campaigns/{id}/activate # Activar campaña
@@ -161,7 +161,7 @@ GET  /campaigns/{id}/metrics   # Métricas de campaña
 
 ### 📊 API de Reportes
 ```
-GET  /api/reports/payments     # 🎯 Endpoint único (v1/v2 dinámico)
+GET  /api/reports/payments     # Endpoint único (v1/v2 dinámico)
 GET  /api/reports/version      # Obtener versión activa
 PUT  /api/reports/version      # Cambiar versión sin downtime
 GET  /api/reports/health       # Health check
@@ -215,14 +215,14 @@ docker-compose ps
 ### Servicios Desplegados
 
 Después del despliegue deberían estar corriendo:
-- ✅ `aeropartners-postgres` (Base de datos)
-- ✅ `aeropartners-pulsar` (Message broker)
-- ✅ `aeropartners-app` (API principal)
-- ✅ `campaigns-svc` + `campaigns-svc-replica` (Servicios de campañas)
-- ✅ `campaigns-proxy` (Proxy con failover)
-- ✅ `event-collector-bff` (🆕 BFF)
-- ✅ `servicio-datos-v1` + `servicio-datos-v2` (Mock services)
-- ✅ Múltiples consumers y processors
+- `aeropartners-postgres` (Base de datos)
+- `aeropartners-pulsar` (Message broker)
+- `aeropartners-app` (API principal)
+- `campaigns-svc` + `campaigns-svc-replica` (Servicios de campañas)
+- `campaigns-proxy` (Proxy con failover)
+- `event-collector-bff` (🆕 BFF)
+- `servicio-datos-v1` + `servicio-datos-v2` (Mock services)
+- Múltiples consumers y processors
 
 ## Pruebas del Sistema
 
@@ -280,144 +280,6 @@ La colección incluye variables pre-configuradas para todos los servicios:
 - **Tests Integrados**: Validación automática de respuestas
 - **Headers Realistas**: User-Agent, Session-ID, Webhook signatures
 
-### 🖥️ Pruebas con cURL (Alternativo)
-
-Si prefieres usar cURL directamente:
-
-#### 1. Probar API de Pagos
-
-```bash
-# Crear un pago
-curl -X POST 'http://localhost:8000/pagos/' \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "id_afiliado": "afiliado-001",
-    "monto": 100.50,
-    "moneda": "COP",
-    "referencia_pago": "test-ref-001"
-  }'
-
-# Obtener estado del pago (usar el ID devuelto)
-curl 'http://localhost:8000/pagos/{id_pago}'
-```
-
-#### 2. Probar API de Campañas
-
-```bash
-# Crear una campaña
-curl -X POST 'http://localhost:8080/api/campaigns/' \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "nombre": "Campaña Test",
-    "presupuesto": {"monto": 1000.0, "moneda": "USD"},
-    "fecha_inicio": "2025-01-01T00:00:00",
-    "fecha_fin": "2025-12-31T23:59:59",
-    "id_afiliado": "afiliado-test"
-  }'
-
-# Listar campañas
-curl 'http://localhost:8080/api/campaigns/'
-```
-
-#### 3. 🆕 Probar Servicio de Reportes (Zero-Downtime)
-
-```bash
-# Obtener reporte inicial (v1 por defecto)
-curl 'http://localhost:8000/api/reports/payments'
-
-# Verificar versión activa
-curl 'http://localhost:8000/api/reports/version'
-
-# Cambiar a versión v2 (sin downtime)
-curl -X PUT 'http://localhost:8000/api/reports/version' \
-  -H 'Content-Type: application/json' \
-  -d '{"active":"v2"}'
-
-# Obtener reporte v2 (más detallado)
-curl 'http://localhost:8000/api/reports/payments'
-
-# Probar filtros
-curl 'http://localhost:8000/api/reports/payments?estado=COMPLETED'
-curl 'http://localhost:8000/api/reports/payments?fecha_desde=2024-01-01T00:00:00Z&fecha_hasta=2024-12-31T23:59:59Z'
-```
-
-#### 4. 🔄 Probar Event Collector BFF
-
-```bash
-# Health check del BFF
-curl 'http://localhost:8090/event-collector/health'
-
-# Enviar evento CLICK básico
-curl -X POST 'http://localhost:8090/event-collector/events' \
-  -H 'Content-Type: application/json' \
-  -H 'User-Agent: Mozilla/5.0 (Test Browser)' \
-  -d '{
-    "tipo_evento": "CLICK",
-    "id_afiliado": "AFILIADO_001",
-    "fuente_evento": "WEB_TAG"
-  }'
-
-# Enviar evento CONVERSION con valor
-curl -X POST 'http://localhost:8090/event-collector/events' \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "tipo_evento": "CONVERSION",
-    "id_afiliado": "AFILIADO_PREMIUM",
-    "valor_conversion": 299.99,
-    "moneda": "USD",
-    "fuente_evento": "MOBILE_SDK"
-  }'
-```
-
-## Formatos de Respuesta del Servicio de Reportes
-
-### Versión 1 (Simple)
-```json
-{
-  "summary": {
-    "totalPayments": 150,
-    "totalAmount": 45750.50,
-    "currency": "COP"
-  },
-  "period": {
-    "from": "2024-01-01T00:00:00Z",
-    "to": "2024-01-31T23:59:59Z"
-  }
-}
-```
-
-### Versión 2 (Detallada - Compatible hacia atrás)
-```json
-{
-  "summary": {
-    "totalPayments": 150,
-    "totalAmount": 45750.50,
-    "currency": "COP",
-    "avgTicket": 305.00,
-    "byStatus": {
-      "PENDING": 25,
-      "COMPLETED": 120,
-      "FAILED": 5
-    }
-  },
-  "breakdown": {
-    "byCampaign": [
-      {
-        "campaignId": "camp-001",
-        "payments": 75,
-        "amount": 22500.00
-      }
-    ]
-  },
-  "period": {
-    "from": "2024-01-01T00:00:00Z", 
-    "to": "2024-01-31T23:59:59Z"
-  },
-  "version": "v2"
-}
-```
-
-## Monitoreo y URLs
 
 ### URLs de Servicios
 
@@ -461,27 +323,27 @@ SELECT * FROM <<tabla>>;
 
 ## Características Destacadas
 
-### 🔄 Zero-Downtime Version Switch
+### Zero-Downtime Version Switch
 - Cambio instantáneo entre versiones de reportes
 - Sin reinicio de contenedores
 - Compatibilidad hacia atrás garantizada
 
-### ⚡ Event-Driven Architecture
+### Event-Driven Architecture
 - Apache Pulsar para messaging confiable
 - Outbox pattern para consistencia
 - Procesamiento asíncrono de eventos
 
-### 🏗️ Microservicios con DDD
+### Microservicios con DDD
 - Bounded contexts bien definidos
 - Agregados que protegen invariantes
 - Separación clara de responsabilidades
 
-### 🔧 Failover y Resilencia
+### Failover y Resilencia
 - Proxy con failover automático
 - Réplicas de servicios críticos
 - Health checks y monitoreo
 
-### 📊 Observabilidad
+### Observabilidad
 - Logs estructurados
 - Health checks en todos los servicios
 - Métricas de Pulsar disponibles
@@ -492,7 +354,7 @@ SELECT * FROM <<tabla>>;
 # Detener todos los servicios
 docker-compose down
 
-# Detener y eliminar volúmenes (⚠️ Elimina todos los datos)
+# Detener y eliminar volúmenes
 docker-compose down -v
 
 # Limpiar imágenes no utilizadas
