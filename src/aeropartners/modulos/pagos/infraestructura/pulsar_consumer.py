@@ -8,7 +8,6 @@ from typing import Dict, Any, Callable
 import pulsar
 from pulsar import Client, Message
 
-# Dependencias de dominio/infraestructura
 from .adaptadores import RepositorioPagosSQLAlchemy, StripeAdapter
 from ..dominio.entidades import Pago
 from ..dominio.enums import EstadoPago
@@ -39,7 +38,6 @@ class PulsarEventConsumer:
         self._repositorio = RepositorioPagosSQLAlchemy()
         self._pasarela = StripeAdapter()
         
-        # Configurar manejo de señales para shutdown graceful
         signal.signal(signal.SIGINT, self._signal_handler)
         signal.signal(signal.SIGTERM, self._signal_handler)
     
@@ -51,7 +49,6 @@ class PulsarEventConsumer:
     def _connect(self):
         """Establece conexión con Pulsar"""
         try:
-            # Configurar cliente con timeouts más largos
             self.client = Client(
                 self.pulsar_url,
                 operation_timeout_seconds=30,
@@ -74,20 +71,18 @@ class PulsarEventConsumer:
         try:
             self._connect()
             self.running = True
-            logger.info("🚀 Iniciando consumo de eventos de Pulsar...")
+            logger.info("Iniciando consumo de eventos de Pulsar")
             
             while self.running:
                 try:
-                    # Recibir mensaje con timeout más largo
-                    msg = self.consumer.receive(timeout_millis=10000)  # 10 segundos
+                    msg = self.consumer.receive(timeout_millis=10000) 
                     
                     if msg:
                         self._process_message(msg)
                         self.consumer.acknowledge(msg)
                         
                 except Exception as e:
-                    if self.running:  # Solo loggear si no estamos en shutdown
-                        # Solo loggear errores que no sean timeout normales
+                    if self.running:
                         if "TimeOut" not in str(e) and "InvalidConfiguration" not in str(e):
                             logger.error(f"Error procesando mensaje: {e}")
                     continue
@@ -108,27 +103,25 @@ class PulsarEventConsumer:
                 self.consumer.close()
             if self.client:
                 self.client.close()
-            logger.info("✅ Consumidor de Pulsar cerrado correctamente")
+            logger.info("Consumidor de Pulsar cerrado correctamente")
         except Exception as e:
             logger.error(f"Error cerrando consumidor: {e}")
     
     def _process_message(self, message: Message):
         """Procesa un mensaje recibido de Pulsar"""
         try:
-            # Decodificar mensaje
             message_data = json.loads(message.data().decode('utf-8'))
             
             event_type = message_data.get("event_type")
             event_data = message_data.get("data", {})
             event_id = message_data.get("event_id")
             
-            logger.info(f"📥 Evento recibido: {event_type} - {event_id}")
+            logger.info(f"Evento recibido: {event_type} - {event_id}")
             
-            # Procesar evento según su tipo
             if event_type in self.event_handlers:
                 self.event_handlers[event_type](event_data)
             else:
-                logger.warning(f"⚠️  Tipo de evento no manejado: {event_type}")
+                logger.warning(f"Tipo de evento no manejado: {event_type}")
                 
         except Exception as e:
             logger.error(f"Error procesando mensaje: {e}")
@@ -143,19 +136,16 @@ class PulsarEventConsumer:
             moneda = event_data.get("moneda")
             id_afiliado = event_data.get("id_afiliado")
 
-            logger.info(f"🔄 Procesando pago pendiente {id_pago} con referencia {referencia}")
+            logger.info(f"Procesando pago pendiente {id_pago} con referencia {referencia}")
 
-            # Cargar el agregado desde repositorio
             pago = self._repositorio.obtener_por_id(uuid.UUID(id_pago))
             if not pago:
                 logger.error(f"Pago {id_pago} no encontrado para procesamiento")
                 return
 
-            # Cambiar estado a PROCESANDO
             pago.estado = EstadoPago.PROCESANDO
             pago.fecha_procesamiento = datetime.now()
 
-            # Ejecutar pasarela de pagos
             resultado = self._pasarela.procesar_pago(
                 referencia=referencia,
                 monto=monto,
@@ -163,7 +153,7 @@ class PulsarEventConsumer:
                 id_afiliado=id_afiliado
             )
 
-            # Actualizar estado según resultado
+
             if resultado.exitoso:
                 pago.estado = EstadoPago.EXITOSO
                 pago.agregar_evento(PagoExitoso(
@@ -224,13 +214,11 @@ class PulsarEventConsumer:
 
 def main():
     """Función principal para ejecutar el consumidor"""
-    # Configurar logging
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
     
-    # Crear y ejecutar consumidor
     consumer = PulsarEventConsumer()
     consumer.start_consuming()
 

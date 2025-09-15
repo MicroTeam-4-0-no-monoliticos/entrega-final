@@ -40,7 +40,6 @@ class Pago:
         self.fecha_procesamiento = datetime.now()
         
         try:
-            # Llamar a la pasarela de pagos
             resultado = pasarela_pagos.procesar_pago(
                 referencia=self.referencia_pago,
                 monto=self.monto.monto,

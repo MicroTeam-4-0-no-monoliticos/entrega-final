@@ -28,7 +28,6 @@ class OutboxProcessor:
             
             for evento in eventos_pendientes:
                 try:
-                    # Procesar el evento (en este caso, solo imprimirlo)
                     self._procesar_evento(evento)
                     
                     # Marcar como procesado
@@ -38,7 +37,6 @@ class OutboxProcessor:
                     
                 except Exception as e:
                     logger.error(f"Error procesando evento {evento.id}: {str(e)}")
-                    # En un escenario real, podrías implementar retry logic aquí
             
             db.commit()
             
