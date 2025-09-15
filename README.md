@@ -142,14 +142,14 @@ El sistema despliega los siguientes contenedores:
 
 ## Endpoints Principales
 
-### 💰 API de Pagos
+### API de Pagos
 ```
 POST /pagos/                    # Procesar nuevo pago
 GET  /pagos/{id_pago}           # Obtener estado del pago
 GET  /pagos/outbox/estadisticas # Estadísticas del outbox
 ```
 
-### 📢 API de Campañas
+### API de Campañas
 ```
 POST /campaigns/               # Crear campaña
 GET  /campaigns/               # Listar campañas
@@ -159,7 +159,7 @@ PATCH /campaigns/{id}/budget   # Actualizar presupuesto
 GET  /campaigns/{id}/metrics   # Métricas de campaña
 ```
 
-### 📊 API de Reportes
+### API de Reportes
 ```
 GET  /api/reports/payments     # Endpoint único (v1/v2 dinámico)
 GET  /api/reports/version      # Obtener versión activa
@@ -167,7 +167,7 @@ PUT  /api/reports/version      # Cambiar versión sin downtime
 GET  /api/reports/health       # Health check
 ```
 
-### 🔄 Event Collector BFF
+### Event Collector BFF
 ```
 GET  /event-collector/health   # Health check del BFF
 POST /event-collector/events   # Recolectar eventos
@@ -220,7 +220,7 @@ Después del despliegue deberían estar corriendo:
 - `aeropartners-app` (API principal)
 - `campaigns-svc` + `campaigns-svc-replica` (Servicios de campañas)
 - `campaigns-proxy` (Proxy con failover)
-- `event-collector-bff` (🆕 BFF)
+- `event-collector-bff` (BFF)
 - `servicio-datos-v1` + `servicio-datos-v2` (Mock services)
 - Múltiples consumers y processors
 
@@ -241,7 +241,7 @@ Para probar todos los microservicios de manera integrada, importa la colección 
 #### Estructura de la Colección:
 
 ```
-📁 Aeropartners - Complete API Collection
+Aeropartners - Complete API Collection
 ├── Health Checks (todos los servicios)
 ├── Event Collector BFF
 ├── Servicio de Pagos
