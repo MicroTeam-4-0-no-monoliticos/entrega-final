@@ -288,6 +288,32 @@ services:
         python -c \"from src.aeropartners.modulos.pagos.infraestructura.pulsar_consumer import PulsarEventConsumer; consumer = PulsarEventConsumer(); consumer.start_consuming()\"
       "
 
+  # Servicio de Datos Mock v1
+  servicio-datos-v1:
+    build:
+      context: ./servicios-mock/servicio-datos-v1
+      dockerfile: Dockerfile
+    container_name: servicio-datos-v1
+    environment:
+      SERVICE_VERSION: v1
+      SERVICE_PORT: 8000
+    ports:
+      - "9001:8000"
+    restart: always
+
+  # Servicio de Datos Mock v2
+  servicio-datos-v2:
+    build:
+      context: ./servicios-mock/servicio-datos-v2
+      dockerfile: Dockerfile
+    container_name: servicio-datos-v2
+    environment:
+      SERVICE_VERSION: v2
+      SERVICE_PORT: 8000
+    ports:
+      - "9002:8000"
+    restart: always
+
 volumes:
   postgres_data:
   pulsar_data:

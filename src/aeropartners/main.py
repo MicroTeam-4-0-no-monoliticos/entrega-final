@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .api.pagos import router as pagos_router
 from .api.campanas import router as campanas_router
+from .api.reporting import router as reporting_router
 from .seedwork.infraestructura.db import engine
 from .modulos.pagos.infraestructura.modelos import Base
 from .modulos.campanas.infraestructura.modelos import CampanaModel, EventInboxModel, OutboxCampanasModel
@@ -27,6 +28,7 @@ app.add_middleware(
 # Incluir routers
 app.include_router(pagos_router)
 app.include_router(campanas_router)
+app.include_router(reporting_router)
 
 @app.get("/")
 async def root():
@@ -47,6 +49,15 @@ async def root():
                 "actualizar_presupuesto": "PATCH /campaigns/{id_campana}/budget",
                 "metricas": "GET /campaigns/{id_campana}/metrics",
                 "health": "GET /campaigns/health"
+            },
+            "reporting": {
+                "generar_reporte": "POST /reporting/report",
+                "obtener_reporte": "GET /reporting/report/{reporte_id}",
+                "listar_reportes": "GET /reporting/reports",
+                "configuracion": "GET /reporting/admin/configuracion",
+                "actualizar_servicio": "POST /reporting/admin/servicio-datos",
+                "verificar_servicio": "GET /reporting/admin/verificar-servicio",
+                "health": "GET /reporting/health"
             }
         }
     }
