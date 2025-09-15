@@ -10,7 +10,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
@@ -153,6 +153,43 @@ services:
       - campaigns-svc-replica
     restart: always
     command: python main.py
+
+  # Event Collector BFF
+  event-collector-bff:
+    build: .
+    container_name: event-collector-bff
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/aeropartners
+      PORT: 8080
+      HOST: 0.0.0.0
+      PULSAR_URL: pulsar://pulsar:6650
+      USE_REDIS: "false"  # Usar repositorios en memoria para la PoC
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      PYTHONPATH: /app
+    ports:
+      - "8090:8080"  # Puerto público del Event Collector BFF
+    depends_on:
+      postgres:
+        condition: service_healthy
+      pulsar:
+        condition: service_healthy
+    restart: always
+    volumes:
+      - ./src:/app/src
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/event-collector/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    command: >
+      sh -c "
+        echo 'Esperando a que Pulsar esté listo...' &&
+        sleep 20 &&
+        echo 'Iniciando Event Collector BFF...' &&
+        python -m uvicorn src.aeropartners.main:app --host 0.0.0.0 --port 8080 --reload
+      "
 
   # Consumer de Campañas - Primario
   campaigns-consumer:
