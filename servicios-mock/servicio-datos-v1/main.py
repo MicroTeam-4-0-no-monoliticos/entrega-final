@@ -59,5 +59,83 @@ async def report_metricas():
         }
     }
 
+# Endpoints adicionales que necesita el servicio de reportes
+@app.get("/campaigns/")
+async def campaigns_list():
+    """Endpoint para listar campañas activas"""
+    return {
+        "version": "v1",
+        "campanas": [
+            {
+                "id": "camp_001",
+                "nombre": "Campaña Invierno 2024",
+                "estado": "activa",
+                "fecha_inicio": "2024-01-01",
+                "fecha_fin": "2024-03-31",
+                "presupuesto": {"monto": 10000.0}
+            },
+            {
+                "id": "camp_002", 
+                "nombre": "Campaña Primavera 2024",
+                "estado": "activa",
+                "fecha_inicio": "2024-03-01",
+                "fecha_fin": "2024-05-31",
+                "presupuesto": {"monto": 5000.0}
+            }
+        ],
+        "total_campanas": 2
+    }
+
+@app.get("/campaigns/stats/general")
+async def campaigns_stats_general():
+    """Endpoint para estadísticas generales de campañas"""
+    return {
+        "version": "v1",
+        "total_campanas": 2,
+        "distribucion_por_estado": {
+            "activa": 2,
+            "inactiva": 0,
+            "pausada": 0
+        },
+        "resumen": {
+            "presupuesto_total": 15000.0,
+            "gasto_total": 7500.0
+        }
+    }
+
+@app.get("/pagos/outbox/estadisticas")
+async def pagos_outbox_estadisticas():
+    """Endpoint para estadísticas de pagos del outbox"""
+    return {
+        "version": "v1",
+        "total_eventos": 15,
+        "eventos_procesados": 12,
+        "eventos_pendientes": 3,
+        "eventos_fallidos": 0,
+        "ultima_actualizacion": "2024-01-15T10:30:00Z"
+    }
+
+@app.get("/pagos/")
+async def pagos_list():
+    """Endpoint para listar pagos"""
+    return [
+        {
+            "id": "pago_001",
+            "monto": 100.50,
+            "moneda": "USD",
+            "fecha_creacion": "2024-01-15T10:30:00Z",
+            "estado": "exitoso",
+            "id_afiliado": "aff_001"
+        },
+        {
+            "id": "pago_002",
+            "monto": 250.75,
+            "moneda": "USD", 
+            "fecha_creacion": "2024-01-16T11:15:00Z",
+            "estado": "exitoso",
+            "id_afiliado": "aff_002"
+        }
+    ]
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

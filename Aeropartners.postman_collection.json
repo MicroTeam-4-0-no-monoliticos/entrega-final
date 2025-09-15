@@ -1,10 +1,10 @@
 {
 	"info": {
-		"_postman_id": "77537c54-a561-4b3d-93ec-c655a978f5f9",
+		"_postman_id": "bbf98875-a09a-459a-88ed-da78a236434a",
 		"name": "Aeropartners",
 		"description": "Colección completa para probar todos los microservicios de Aeropartners: Pagos, Campañas, Reporting y Event Collector BFF",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "43968510"
+		"_exporter_id": "45740584"
 	},
 	"item": [
 		{
@@ -873,6 +873,167 @@
 			]
 		},
 		{
+			"name": "Servicio de Reporting",
+			"item": [
+				{
+					"name": "Verificar Configuración Actual",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{aeropartners_url}}/reporting/admin/configuracion",
+							"host": [
+								"{{aeropartners_url}}"
+							],
+							"path": [
+								"reporting",
+								"admin",
+								"configuracion"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Cambiar a Servicio v1",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"url\": \"http://servicio-datos-v1:8000\",\n  \"version\": \"v1\"\n}"
+						},
+						"url": {
+							"raw": "{{aeropartners_url}}/reporting/admin/servicio-datos",
+							"host": [
+								"{{aeropartners_url}}"
+							],
+							"path": [
+								"reporting",
+								"admin",
+								"servicio-datos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Cambiar a Servicio v2",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"url\": \"http://servicio-datos-v2:8000\",\n  \"version\": \"v2\"\n}"
+						},
+						"url": {
+							"raw": "{{aeropartners_url}}/reporting/admin/servicio-datos",
+							"host": [
+								"{{aeropartners_url}}"
+							],
+							"path": [
+								"reporting",
+								"admin",
+								"servicio-datos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Generar Reporte - Pagos por Período",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"tipo_reporte\": \"pagos_por_periodo\",\n  \"filtros\": {\n    \"fecha_inicio\": \"2024-01-01\",\n    \"fecha_fin\": \"2024-12-31\",\n    \"moneda\": \"USD\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{aeropartners_url}}/reporting/report",
+							"host": [
+								"{{aeropartners_url}}"
+							],
+							"path": [
+								"reporting",
+								"report"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Generar Reporte - Campañas Activas",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"tipo_reporte\": \"campanas_activas\",\n  \"filtros\": {\n    \"fecha_inicio\": \"2024-01-01\",\n    \"fecha_fin\": \"2024-12-31\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{aeropartners_url}}/reporting/report",
+							"host": [
+								"{{aeropartners_url}}"
+							],
+							"path": [
+								"reporting",
+								"report"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Generar Reporte - Métricas Generales",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"tipo_reporte\": \"metricas_generales\",\n  \"filtros\": {\n    \"fecha_inicio\": \"2024-01-01\",\n    \"fecha_fin\": \"2024-12-31\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{aeropartners_url}}/reporting/report",
+							"host": [
+								"{{aeropartners_url}}"
+							],
+							"path": [
+								"reporting",
+								"report"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "Servicio de Campañas",
 			"item": [
 				{
@@ -981,197 +1142,6 @@
 							"path": [
 								"api",
 								"campaigns",
-								"health"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Servicio de Reportes",
-			"item": [
-				{
-					"name": "Obtener Reporte v1 (por defecto)",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{aeropartners_url}}/api/reports/payments",
-							"host": [
-								"{{aeropartners_url}}"
-							],
-							"path": [
-								"api",
-								"reports",
-								"payments"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Obtener Versión Activa",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{aeropartners_url}}/api/reports/version",
-							"host": [
-								"{{aeropartners_url}}"
-							],
-							"path": [
-								"api",
-								"reports",
-								"version"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Cambiar a Versión v2 (Zero-Downtime)",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"active\": \"v2\"\n}"
-						},
-						"url": {
-							"raw": "{{aeropartners_url}}/api/reports/version",
-							"host": [
-								"{{aeropartners_url}}"
-							],
-							"path": [
-								"api",
-								"reports",
-								"version"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Obtener Reporte v2 (detallado)",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{aeropartners_url}}/api/reports/payments",
-							"host": [
-								"{{aeropartners_url}}"
-							],
-							"path": [
-								"api",
-								"reports",
-								"payments"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Reporte con Filtro por Estado",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{aeropartners_url}}/api/reports/payments?estado=COMPLETED",
-							"host": [
-								"{{aeropartners_url}}"
-							],
-							"path": [
-								"api",
-								"reports",
-								"payments"
-							],
-							"query": [
-								{
-									"key": "estado",
-									"value": "COMPLETED"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Reporte con Filtro por Fechas",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{aeropartners_url}}/api/reports/payments?fecha_desde=2024-01-01T00:00:00Z&fecha_hasta=2024-12-31T23:59:59Z",
-							"host": [
-								"{{aeropartners_url}}"
-							],
-							"path": [
-								"api",
-								"reports",
-								"payments"
-							],
-							"query": [
-								{
-									"key": "fecha_desde",
-									"value": "2024-01-01T00:00:00Z"
-								},
-								{
-									"key": "fecha_hasta",
-									"value": "2024-12-31T23:59:59Z"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Cambiar de vuelta a v1",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"active\": \"v1\"\n}"
-						},
-						"url": {
-							"raw": "{{aeropartners_url}}/api/reports/version",
-							"host": [
-								"{{aeropartners_url}}"
-							],
-							"path": [
-								"api",
-								"reports",
-								"version"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Health Check Reportes",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{aeropartners_url}}/api/reports/health",
-							"host": [
-								"{{aeropartners_url}}"
-							],
-							"path": [
-								"api",
-								"reports",
 								"health"
 							]
 						}
