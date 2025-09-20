@@ -225,7 +225,15 @@ class SagaPulsarConsumer:
                 self.marcar_paso_exitoso_handler.handle(comando)
                 logger.info(f"Paso {paso_pendiente.tipo.value} ejecutado exitosamente")
                 
-                # Ejecutar siguiente paso si no es el último
+                # Si es PROCESAR_PAGO, NO continuar automáticamente
+                # Esperar a que llegue el evento de pago resuelto (10-15 segundos)
+                if paso_pendiente.tipo.value == "PROCESAR_PAGO":
+                    pago_id = resultado.get('datos', {}).get('id_pago')
+                    logger.info(f"SAGA {saga.id} pausada esperando resolución del pago {pago_id}")
+                    logger.info(f"Tiempo estimado de procesamiento: 10-15 segundos")
+                    return
+                
+                # Para otros pasos, continuar normalmente
                 # Obtener la SAGA actualizada del repositorio
                 saga_actualizada = self.repositorio.obtener_por_id(str(saga.id))
                 if saga_actualizada:
@@ -488,7 +496,7 @@ class SagaPulsarConsumer:
             logger.error(f"Error en cleanup de SAGA: {str(e)}")
 
     def _handle_pago_exitoso(self, message_data: Dict[str, Any], correlation_id: str):
-        """Manejar evento de pago exitoso y actualizar SAGA correspondiente"""
+        """Manejar evento de pago exitoso y continuar SAGA con GENERAR_REPORTE"""
         try:
             data = message_data.get('data', {})
             id_pago = data.get('id_pago')
@@ -512,13 +520,17 @@ class SagaPulsarConsumer:
                         # Actualizar la SAGA en el repositorio
                         self.repositorio.actualizar(saga)
                         logger.info(f"SAGA {saga.id} actualizada con estado final del pago")
+                        
+                        # CONTINUAR con el siguiente paso (GENERAR_REPORTE)
+                        logger.info(f"Continuando SAGA {saga.id} con siguiente paso: GENERAR_REPORTE")
+                        self._ejecutar_siguiente_paso(saga)
                         return
                         
         except Exception as e:
             logger.error(f"Error procesando pago exitoso: {str(e)}")
 
     def _handle_pago_fallido(self, message_data: Dict[str, Any], correlation_id: str):
-        """Manejar evento de pago fallido y actualizar SAGA correspondiente"""
+        """Manejar evento de pago fallido y ejecutar compensaciones (NO generar reporte)"""
         try:
             data = message_data.get('data', {})
             id_pago = data.get('id_pago')
@@ -536,6 +548,12 @@ class SagaPulsarConsumer:
                         
                         logger.info(f"Actualizando paso de pago fallido en SAGA {saga.id}")
                         
+                        # Actualizar el resultado del paso con el estado final del pago
+                        if paso.resultado:
+                            paso.resultado['estado'] = 'FALLIDO'
+                            paso.resultado['fecha_procesamiento'] = data.get('fecha_procesamiento')
+                            paso.resultado['mensaje_error'] = mensaje_error
+                        
                         # Marcar el paso como fallido
                         paso.marcar_fallido(mensaje_error)
                         saga.estado = EstadoSaga.FALLIDA
@@ -545,6 +563,10 @@ class SagaPulsarConsumer:
                         # Actualizar la SAGA en el repositorio
                         self.repositorio.actualizar(saga)
                         logger.info(f"SAGA {saga.id} marcada como fallida por pago fallido")
+                        
+                        # Ejecutar compensaciones (solo campaña, NO reporte)
+                        logger.info(f"Ejecutando compensaciones para SAGA {saga.id} - NO se generará reporte")
+                        self._ejecutar_compensaciones(saga)
                         return
                         
         except Exception as e:
