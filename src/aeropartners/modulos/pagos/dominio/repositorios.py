@@ -23,3 +23,7 @@ class RepositorioPagos(ABC):
     @abstractmethod
     def eliminar(self, pago: Pago):
         raise NotImplementedError()
+    
+    @abstractmethod
+    def obtener_todos(self):
+        raise NotImplementedError()

@@ -126,6 +126,41 @@ class RepositorioPagosSQLAlchemy(RepositorioPagos):
         finally:
             db.close()
     
+    def obtener_todos(self):
+        """Obtener todos los pagos"""
+        db = SessionLocal()
+        try:
+            modelos = db.query(PagoModel).all()
+            pagos = []
+            for modelo in modelos:
+                pago = self._reconstruir_pago(modelo)
+                pagos.append(pago)
+            return pagos
+        except Exception as e:
+            db.rollback()
+            raise e
+        finally:
+            db.close()
+    
+    def _reconstruir_pago(self, modelo: PagoModel) -> Pago:
+        """Reconstruir entidad Pago desde el modelo de base de datos"""
+        from ..dominio.objetos_valor import Dinero, Moneda
+        from ..dominio.enums import EstadoPago
+        
+        pago = Pago(
+            id_afiliado=modelo.id_afiliado,
+            monto=Dinero(modelo.monto, Moneda(modelo.moneda)),
+            referencia_pago=modelo.referencia_pago
+        )
+        pago.id = modelo.id
+        pago.estado = EstadoPago(modelo.estado)
+        pago.fecha_creacion = modelo.fecha_creacion
+        pago.fecha_actualizacion = modelo.fecha_actualizacion
+        pago.fecha_procesamiento = modelo.fecha_procesamiento
+        pago.mensaje_error = modelo.mensaje_error
+        
+        return pago
+    
     def _serializar_evento(self, evento) -> str:
         """Serializa un evento de dominio a JSON"""
         import json

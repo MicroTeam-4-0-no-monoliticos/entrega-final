@@ -6,7 +6,7 @@ from ..dominio.entidades import Pago
 from ..dominio.eventos import PagoPendiente
 from ..dominio.repositorios import RepositorioPagos
 from ..dominio.servicios import PasarelaDePagos
-from .comandos import ProcesarPagoCommand
+from .comandos import ProcesarPagoCommand, RevertirPagoCommand
 from .queries import ObtenerEstadoPagoQuery
 from sqlalchemy.orm import Session
 
@@ -61,3 +61,21 @@ class ObtenerEstadoPagoHandler(QueryHandler):
         }
         
         return QueryResultado(resultado=resultado)
+
+class RevertirPagoHandler(ComandoHandler):
+    def __init__(self, repositorio: RepositorioPagos):
+        self.repositorio = repositorio
+
+    def handle(self, comando: RevertirPagoCommand):
+        pago = self.repositorio.obtener_por_id(str(comando.id_pago))
+        
+        if not pago:
+            raise ValueError(f"Pago {comando.id_pago} no encontrado")
+        
+        # Revertir el pago
+        pago.revertir(comando.motivo, comando.saga_id)
+        
+        # Actualizar en repositorio
+        self.repositorio.actualizar(pago)
+        
+        return pago
