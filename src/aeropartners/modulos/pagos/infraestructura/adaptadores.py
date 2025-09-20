@@ -23,8 +23,8 @@ class StripeAdapter(PasarelaDePagos):
         """
         time.sleep(random.uniform(2.0, 8.0))
         
-        # Simular éxito/fallo aleatorio (90% éxito, 10% fallo)
-        if random.random() < 0.9:
+        # Simular éxito/fallo aleatorio (50% éxito, 50% fallo)
+        if random.random() < 0.5:
             return ResultadoPago(
                 exitoso=True,
                 referencia_transaccion=f"txn_{random.randint(100000, 999999)}"
