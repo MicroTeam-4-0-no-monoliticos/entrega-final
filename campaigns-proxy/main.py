@@ -9,7 +9,7 @@ import uvicorn
 
 PRIMARY = os.getenv("PRIMARY_SERVICE_URL", "http://campaigns-svc:8000").rstrip("/")
 REPLICA = os.getenv("REPLICA_SERVICE_URL", "http://campaigns-svc-replica:8000").rstrip("/")
-HEALTH_PATH = os.getenv("HEALTH_PATH", "/campaigns/healthz")  # los servicios de campañas exponen /campaigns/healthz
+HEALTH_PATH = os.getenv("HEALTH_PATH", "/campaigns/healthz")
 TIMEOUT = float(os.getenv("HEALTH_CHECK_TIMEOUT", "5"))
 INTERVAL = float(os.getenv("HEALTH_CHECK_INTERVAL", "2"))
 MAX_FAILS = int(os.getenv("MAX_CONSECUTIVE_FAILURES", "3"))
