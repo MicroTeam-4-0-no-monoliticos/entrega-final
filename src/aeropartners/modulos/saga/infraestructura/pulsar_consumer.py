@@ -11,6 +11,7 @@ from pulsar import ConsumerType
 from ....seedwork.infraestructura.db import SessionLocal
 from ..dominio.repositorios import RepositorioSaga
 from ..infraestructura.adaptadores import RepositorioSagaSQLAlchemy
+from ..dominio.entidades import TipoPaso, EstadoSaga
 from ..aplicacion.comandos import (
     MarcarPasoExitosoCommand, MarcarPasoFallidoCommand,
     IniciarCompensacionCommand, EjecutarCompensacionCommand,
@@ -76,7 +77,7 @@ class SagaPulsarConsumer:
             # Crear cliente de Pulsar
             self.client = pulsar.Client(self.pulsar_url)
             
-            # Crear consumer
+            # Crear consumer para saga-events
             self.consumer = self.client.subscribe(
                 topic="saga-events",
                 subscription_name=self.subscription_name,
@@ -85,14 +86,34 @@ class SagaPulsarConsumer:
                 initial_position=pulsar.InitialPosition.Earliest
             )
             
+            # Crear consumer para pagos-events
+            self.payment_consumer = self.client.subscribe(
+                topic="pagos-events",
+                subscription_name=f"{self.subscription_name}-payments",
+                consumer_type=self.subscription_type,
+                consumer_name=f"saga-orchestrator-payments-{uuid.uuid4().hex[:8]}",
+                initial_position=pulsar.InitialPosition.Earliest
+            )
+            
             logger.info(f"🔥 SAGA Consumer iniciado: {self.subscription_name}")
-            logger.info(f"📡 Escuchando topic: saga-events")
+            logger.info(f"📡 Escuchando topics: saga-events, pagos-events")
             
             # Bucle principal de consumo
             while True:
                 try:
-                    msg = self.consumer.receive()
-                    self._process_message(msg)
+                    # Procesar mensajes de saga-events
+                    try:
+                        msg = self.consumer.receive(timeout_millis=1000)  # Timeout de 1 segundo
+                        self._process_message(msg)
+                    except pulsar.Timeout:
+                        pass  # Timeout normal, continuar
+                    
+                    # Procesar mensajes de pagos-events
+                    try:
+                        msg = self.payment_consumer.receive(timeout_millis=1000)  # Timeout de 1 segundo
+                        self._process_message(msg)
+                    except pulsar.Timeout:
+                        pass  # Timeout normal, continuar
                     
                 except KeyboardInterrupt:
                     logger.info("Deteniendo SAGA consumer por interrupción del usuario")
@@ -454,6 +475,10 @@ class SagaPulsarConsumer:
             if self.consumer:
                 self.consumer.close()
                 logger.info("SAGA Consumer cerrado")
+            
+            if hasattr(self, 'payment_consumer') and self.payment_consumer:
+                self.payment_consumer.close()
+                logger.info("Payment Consumer cerrado")
             
             if self.client:
                 self.client.close()
