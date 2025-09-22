@@ -13,6 +13,7 @@ class TipoReporte(Enum):
     CAMPAÑAS_ACTIVAS = "campanas_activas"
     MÉTRICAS_GENERALES = "metricas_generales"
     RENDIMIENTO_AFILIADOS = "rendimiento_afiliados"
+    CAMPAÑA_COMPLETA = "CAMPAÑA_COMPLETA"
 
 
 @dataclass

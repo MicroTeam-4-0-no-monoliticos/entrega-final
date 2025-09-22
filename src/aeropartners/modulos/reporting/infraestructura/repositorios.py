@@ -179,10 +179,10 @@ class ConfiguracionServicioDatosRepositoryImpl(ConfiguracionServicioDatosReposit
         try:
             with self._create_session() as session:
                 query = text("""
-                    SELECT url, version, activo, fecha_actualizacion
+                    SELECT url, version, activo, updated_at
                     FROM configuracion_servicio_datos
                     WHERE activo = true
-                    ORDER BY fecha_actualizacion DESC
+                    ORDER BY updated_at DESC
                     LIMIT 1
                 """)
                 
@@ -193,7 +193,7 @@ class ConfiguracionServicioDatosRepositoryImpl(ConfiguracionServicioDatosReposit
                         url=result.url,
                         version=result.version,
                         activo=result.activo,
-                        fecha_actualizacion=result.fecha_actualizacion
+                        fecha_actualizacion=result.updated_at
                     )
                 return None
                 
@@ -230,9 +230,9 @@ class ConfiguracionServicioDatosRepositoryImpl(ConfiguracionServicioDatosReposit
         try:
             with self._create_session() as session:
                 query = text("""
-                    SELECT url, version, activo, fecha_actualizacion
+                    SELECT url, version, activo, updated_at
                     FROM configuracion_servicio_datos
-                    ORDER BY fecha_actualizacion DESC
+                    ORDER BY updated_at DESC
                 """)
                 
                 results = session.execute(query).fetchall()
@@ -242,7 +242,7 @@ class ConfiguracionServicioDatosRepositoryImpl(ConfiguracionServicioDatosReposit
                         url=row.url,
                         version=row.version,
                         activo=row.activo,
-                        fecha_actualizacion=row.fecha_actualizacion
+                        fecha_actualizacion=row.updated_at
                     )
                     for row in results
                 ]

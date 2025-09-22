@@ -1,6 +1,6 @@
-// API Configuration - Kubernetes Deployment
+// API Configuration - Cloud Run Proxy (HTTPS)
 const API_CONFIG = {
-    sagas: 'http://34.10.122.141:8000'      // SAGA Orchestrator (K8s)
+    sagas: 'https://saga-proxy-557335216999.us-central1.run.app'      // SAGA Proxy (Cloud Run)
 };
 
 // Global state

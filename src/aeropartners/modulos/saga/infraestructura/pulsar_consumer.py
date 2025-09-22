@@ -463,9 +463,17 @@ class SagaPulsarConsumer:
             
             elif tipo_paso == "GENERAR_REPORTE":
                 # Llamar al servicio de reporting
+                # Convertir 'tipo' a 'tipo_reporte' para el endpoint
+                datos_reporte = {
+                    "tipo_reporte": datos.get("tipo", "CAMPAÑA_COMPLETA"),
+                    "filtros": {
+                        "fecha_inicio": "2025-01-01",
+                        "fecha_fin": "2025-12-31"
+                    }
+                }
                 response = self.http_client.post(
                     "http://aeropartners-service:8000/reporting/report",
-                    json=datos
+                    json=datos_reporte
                 )
                 if response.status_code == 200:
                     return {"exitoso": True, "datos": response.json()}
