@@ -348,7 +348,192 @@ SELECT * FROM <<tabla>>;
 - Health checks en todos los servicios
 - Métricas de Pulsar disponibles
 
+## Despliegue en Kubernetes (GKE)
+
+### Prerrequisitos para K8s
+
+- **Google Cloud SDK** instalado y configurado
+- **kubectl** configurado para el cluster GKE
+- **Docker** para construir imágenes
+- **Google Artifact Registry** configurado
+
+### Configuración del Cluster
+
+```bash
+# Crear cluster GKE
+gcloud container clusters create aeropartners-cluster \
+  --zone=us-central1-a \
+  --num-nodes=3 \
+  --machine-type=e2-medium \
+  --enable-autoscaling \
+  --min-nodes=1 \
+  --max-nodes=5
+
+# Configurar kubectl
+gcloud container clusters get-credentials aeropartners-cluster --zone=us-central1-a
+```
+
+### Despliegue de Servicios
+
+```bash
+# Aplicar configuraciones base
+kubectl apply -f k8s/01-namespace.yaml
+kubectl apply -f k8s/02-configmap.yaml
+kubectl apply -f k8s/03-secret.yaml
+
+# Desplegar base de datos
+kubectl apply -f k8s/04-postgres-deployment.yaml
+kubectl apply -f k8s/05-postgres-service.yaml
+
+# Desplegar Pulsar
+kubectl apply -f k8s/06-pulsar-deployment.yaml
+kubectl apply -f k8s/07-pulsar-service.yaml
+
+# Desplegar aplicación principal
+kubectl apply -f k8s/08-main-deployment.yaml
+kubectl apply -f k8s/09-main-service.yaml
+
+# Desplegar servicios de datos
+kubectl apply -f k8s/10-servicio-datos-v1-deployment.yaml
+kubectl apply -f k8s/11-servicio-datos-v2-deployment.yaml
+
+# Desplegar consumers
+kubectl apply -f k8s/12-consumers-deployment.yaml
+
+# Exponer servicios
+kubectl apply -f k8s/13-ingress.yaml
+```
+
+### URLs de Producción
+
+| Servicio | URL | Descripción |
+|----------|-----|-------------|
+| API Principal | http://34.10.122.141:8000 | Backend principal |
+| Frontend | https://misw-4406-entrega-final.web.app | Aplicación web |
+| Cloud Run Proxy | https://saga-proxy-557335216999.us-central1.run.app | Proxy HTTPS para SAGAs |
+
+### Verificar Despliegue
+
+```bash
+# Ver estado de pods
+kubectl get pods -n aeropartners
+
+# Ver logs de servicios
+kubectl logs -n aeropartners deployment/aeropartners-deployment -c aeropartners-main
+
+# Verificar servicios
+kubectl get svc -n aeropartners
+```
+
+## Frontend (Firebase Hosting)
+
+### Estructura del Frontend
+
+```
+frontend/
+├── public/
+│   ├── index.html              # Página principal
+│   ├── script-sagas.js         # Lógica de SAGAs
+│   ├── styles.css              # Estilos
+│   └── config-https.js         # Configuración HTTPS
+└── firebase.json               # Configuración Firebase
+```
+
+### Características del Frontend
+
+- **Interfaz de SAGAs**: Creación y monitoreo de SAGAs
+- **Validación de Tipos**: Solo permite tipos válidos de campañas
+- **Monitoreo en Tiempo Real**: Estado de SAGAs y compensaciones
+- **Proxy HTTPS**: Comunicación segura con backend K8s
+- **Responsive Design**: Compatible con dispositivos móviles
+
+### Despliegue a Firebase
+
+```bash
+# Instalar Firebase CLI
+npm install -g firebase-tools
+
+# Iniciar sesión
+firebase login
+
+# Inicializar proyecto
+firebase init hosting
+
+# Desplegar
+firebase deploy --hosting
+```
+
+### Configuración de CORS
+
+El backend está configurado para aceptar requests desde:
+- `https://misw-4406-entrega-final.web.app` (Producción)
+- `http://localhost:5500` (Desarrollo local)
+- `http://127.0.0.1:5500` (Desarrollo local)
+
+## SAGA Orchestrator
+
+### Características del SAGA
+
+- **Orquestación Completa**: Campañas → Pagos → Reportes
+- **Compensaciones Automáticas**: Rollback en caso de fallos
+- **Estados Granulares**: INICIADA, COMPLETADA, FALLIDA
+- **Monitoreo en Tiempo Real**: Estado de cada paso
+- **Persistencia**: Base de datos PostgreSQL
+
+### Tipos de Campañas Soportadas
+
+- `PROMOCIONAL`
+- `FIDELIZACION` 
+- `ADQUISICION`
+- `RETENCION`
+
+### Endpoints de SAGA
+
+```
+POST /saga/crear-campana-completa    # Crear nueva SAGA
+GET  /saga/                          # Listar todas las SAGAs
+GET  /saga/{id}/status               # Estado detallado de SAGA
+```
+
+### Ejemplo de Uso
+
+```bash
+# Crear SAGA
+curl -X POST "https://saga-proxy-557335216999.us-central1.run.app/saga/crear-campana-completa" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "campana": {
+      "tipo": "PROMOCIONAL",
+      "nombre": "Campaña Test",
+      "descripcion": "Prueba del sistema",
+      "fecha_inicio": "2025-01-01",
+      "fecha_fin": "2025-12-31",
+      "presupuesto": 10000
+    },
+    "pago": {
+      "afiliado_id": "afiliado_001",
+      "monto": 5000,
+      "metodo_pago": "TARJETA_CREDITO",
+      "numero_tarjeta": "4111111111111111",
+      "fecha_vencimiento": "2025-12-31",
+      "cvv": "123"
+    },
+    "reporte": {
+      "tipo": "CAMPAÑA_COMPLETA",
+      "filtros": {
+        "fecha_inicio": "2025-01-01",
+        "fecha_fin": "2025-12-31"
+      }
+    }
+  }'
+
+# Ver estado de SAGA
+curl "https://saga-proxy-557335216999.us-central1.run.app/saga/{saga_id}/status"
+```
+
 ## Detener el Sistema
+
+### Docker Compose (Desarrollo Local)
 
 ```bash
 # Detener todos los servicios
@@ -359,4 +544,14 @@ docker-compose down -v
 
 # Limpiar imágenes no utilizadas
 docker system prune -f
+```
+
+### Kubernetes (Producción)
+
+```bash
+# Eliminar namespace completo
+kubectl delete namespace aeropartners
+
+# Eliminar cluster (cuidado!)
+gcloud container clusters delete aeropartners-cluster --zone=us-central1-a
 ```
