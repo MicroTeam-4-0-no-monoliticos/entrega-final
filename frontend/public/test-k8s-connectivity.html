@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test de Conectividad - Kubernetes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .loading {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .service-info {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Test de Conectividad - Kubernetes Deployment</h1>
+    
+    <div class="test-container">
+        <h2>Información del Despliegue</h2>
+        <div class="service-info">
+            <strong>IP Externa:</strong> 34.10.122.141<br>
+            <strong>Clúster:</strong> GKE (Google Kubernetes Engine)<br>
+            <strong>Proyecto:</strong> aeropartners-saga-dev<br>
+            <strong>Namespace:</strong> aeropartners
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2>Servicios Desplegados</h2>
+        <div id="services-list">
+            <div class="loading">Cargando información de servicios...</div>
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2>Test de Conectividad</h2>
+        <button onclick="testAllServices()">🧪 Probar Todos los Servicios</button>
+        <button onclick="testSagaService()">🔄 Probar SAGA Orchestrator</button>
+        <button onclick="testCampaignsService()">📢 Probar Campaigns Proxy</button>
+        <button onclick="testDataServices()">📊 Probar Servicios de Datos</button>
+        
+        <div id="test-results"></div>
+    </div>
+
+    <div class="test-container">
+        <h2>Crear SAGA de Prueba</h2>
+        <button onclick="createTestSaga()">🚀 Crear SAGA de Prueba</button>
+        <div id="saga-test-results"></div>
+    </div>
+
+    <script>
+        const API_CONFIG = {
+            sagas: 'http://34.10.122.141:8000',
+            campaigns: 'http://34.10.122.141:8080',
+            payments: 'http://34.10.122.141:8000',
+            reporting: 'http://34.10.122.141:8000',
+            servicio_datos_v1: 'http://34.10.122.141:9001',
+            servicio_datos_v2: 'http://34.10.122.141:9002',
+            event_collector: 'http://34.10.122.141:8000'
+        };
+
+        const services = [
+            { name: 'SAGA Orchestrator', url: `${API_CONFIG.sagas}/health`, port: '8000' },
+            { name: 'Campaigns Proxy', url: `${API_CONFIG.campaigns}/health`, port: '8080' },
+            { name: 'Servicio Datos v1', url: `${API_CONFIG.servicio_datos_v1}/health`, port: '9001' },
+            { name: 'Servicio Datos v2', url: `${API_CONFIG.servicio_datos_v2}/health`, port: '9002' }
+        ];
+
+        function displayServices() {
+            const servicesList = document.getElementById('services-list');
+            servicesList.innerHTML = services.map(service => `
+                <div class="service-info">
+                    <strong>${service.name}</strong><br>
+                    <strong>URL:</strong> ${service.url}<br>
+                    <strong>Puerto:</strong> ${service.port}
+                </div>
+            `).join('');
+        }
+
+        async function testService(service) {
+            try {
+                const response = await fetch(service.url);
+                const data = await response.json();
+                return {
+                    success: true,
+                    status: response.status,
+                    data: data
+                };
+            } catch (error) {
+                return {
+                    success: false,
+                    error: error.message
+                };
+            }
+        }
+
+        async function testAllServices() {
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML = '<div class="loading">Probando servicios...</div>';
+
+            const results = [];
+            for (const service of services) {
+                const result = await testService(service);
+                results.push({ service, result });
+            }
+
+            resultsDiv.innerHTML = results.map(({ service, result }) => `
+                <div class="test-result ${result.success ? 'success' : 'error'}">
+                    <strong>${service.name}</strong><br>
+                    ${result.success ? 
+                        `✅ Conectado (${result.status}) - ${JSON.stringify(result.data)}` : 
+                        `❌ Error: ${result.error}`
+                    }
+                </div>
+            `).join('');
+        }
+
+        async function testSagaService() {
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML = '<div class="loading">Probando SAGA Orchestrator...</div>';
+
+            try {
+                // Test health
+                const healthResponse = await fetch(`${API_CONFIG.sagas}/health`);
+                const healthData = await healthResponse.json();
+
+                // Test list SAGAs
+                const sagasResponse = await fetch(`${API_CONFIG.sagas}/saga/`);
+                const sagasData = await sagasResponse.json();
+
+                resultsDiv.innerHTML = `
+                    <div class="test-result success">
+                        <strong>SAGA Orchestrator</strong><br>
+                        ✅ Health: ${JSON.stringify(healthData)}<br>
+                        ✅ SAGAs: ${sagasData.total || 0} encontradas
+                    </div>
+                `;
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="test-result error">
+                        <strong>SAGA Orchestrator</strong><br>
+                        ❌ Error: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function testCampaignsService() {
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML = '<div class="loading">Probando Campaigns Proxy...</div>';
+
+            try {
+                const response = await fetch(`${API_CONFIG.campaigns}/health`);
+                const data = await response.json();
+
+                resultsDiv.innerHTML = `
+                    <div class="test-result success">
+                        <strong>Campaigns Proxy</strong><br>
+                        ✅ Conectado: ${JSON.stringify(data)}
+                    </div>
+                `;
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="test-result error">
+                        <strong>Campaigns Proxy</strong><br>
+                        ❌ Error: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function testDataServices() {
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML = '<div class="loading">Probando Servicios de Datos...</div>';
+
+            const dataServices = [
+                { name: 'Servicio Datos v1', url: `${API_CONFIG.servicio_datos_v1}/health` },
+                { name: 'Servicio Datos v2', url: `${API_CONFIG.servicio_datos_v2}/health` }
+            ];
+
+            const results = [];
+            for (const service of dataServices) {
+                const result = await testService(service);
+                results.push({ service, result });
+            }
+
+            resultsDiv.innerHTML = results.map(({ service, result }) => `
+                <div class="test-result ${result.success ? 'success' : 'error'}">
+                    <strong>${service.name}</strong><br>
+                    ${result.success ? 
+                        `✅ Conectado: ${JSON.stringify(result.data)}` : 
+                        `❌ Error: ${result.error}`
+                    }
+                </div>
+            `).join('');
+        }
+
+        async function createTestSaga() {
+            const resultsDiv = document.getElementById('saga-test-results');
+            resultsDiv.innerHTML = '<div class="loading">Creando SAGA de prueba...</div>';
+
+            // Tipos de campaña válidos
+            const tiposValidos = ['PROMOCIONAL', 'FIDELIZACION', 'ADQUISICION', 'RETENCION'];
+            const tipoAleatorio = tiposValidos[Math.floor(Math.random() * tiposValidos.length)];
+
+            try {
+                const response = await fetch(`${API_CONFIG.sagas}/saga/crear-campana-completa`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        campana: {
+                            nombre: `Campaña Test Frontend K8s - ${tipoAleatorio}`,
+                            tipo: tipoAleatorio,
+                            presupuesto: { monto: 1000, moneda: "USD" },
+                            fecha_inicio: "2024-01-01T00:00:00Z",
+                            fecha_fin: "2024-12-31T23:59:59Z",
+                            id_afiliado: "afiliado-test-frontend-k8s",
+                            descripcion: "Campaña de prueba desde el frontend"
+                        },
+                        pago: {
+                            id_afiliado: "afiliado-test-frontend-k8s",
+                            monto: 1000,
+                            moneda: "USD",
+                            referencia_pago: "pago-test-frontend-k8s-123"
+                        },
+                        reporte: {
+                            tipo_reporte: "CAMPAÑA_COMPLETA",
+                            filtros: {
+                                fecha_inicio: "2024-01-01",
+                                fecha_fin: "2024-12-31",
+                                afiliado_id: "afiliado-test-frontend-k8s"
+                            }
+                        }
+                    })
+                });
+
+                const data = await response.json();
+
+                resultsDiv.innerHTML = `
+                    <div class="test-result success">
+                        <strong>SAGA Creada Exitosamente</strong><br>
+                        ✅ SAGA ID: ${data.saga_id}<br>
+                        ✅ Estado: ${data.estado}<br>
+                        ✅ Mensaje: ${data.mensaje}
+                    </div>
+                `;
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="test-result error">
+                        <strong>Error Creando SAGA</strong><br>
+                        ❌ Error: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Initialize
+        displayServices();
+    </script>
+</body>
+</html>

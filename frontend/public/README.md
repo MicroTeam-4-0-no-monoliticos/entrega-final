@@ -95,9 +95,9 @@ Las URLs de los servicios están configuradas en `script.js`:
 
 ```javascript
 const API_CONFIG = {
-    campaigns: 'http://localhost:8080',  // BFF de campañas
-    sagas: 'http://localhost:8090',      // SAGA Orchestrator
-    payments: 'http://localhost:8000'    // Servicio de pagos
+    campaigns: 'http://34.10.122.141:8080',  // BFF de campañas (K8s)
+    sagas: 'http://34.10.122.141:8000',      // SAGA Orchestrator (K8s)
+    payments: 'http://34.10.122.141:8000'    // Servicio de pagos (K8s)
 };
 ```
 
@@ -128,9 +128,9 @@ Si ves errores de CORS, verifica que los servicios backend tengan CORS habilitad
 
 ### Servicios no disponibles
 Verifica que todos los servicios estén ejecutándose:
-- BFF de Campañas: `http://localhost:8080/health`
-- SAGA Orchestrator: `http://localhost:8090/health`
-- Servicio de Pagos: `http://localhost:8000/health`
+- BFF de Campañas: `http://34.10.122.141:8080/health`
+- SAGA Orchestrator: `http://34.10.122.141:8000/health`
+- Servicio de Pagos: `http://34.10.122.141:8000/health`
 
 ### Datos no se cargan
 - Verifica la consola del navegador para errores

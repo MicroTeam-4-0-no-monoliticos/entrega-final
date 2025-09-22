@@ -1,6 +1,6 @@
-// API Configuration
+// API Configuration - Kubernetes Deployment
 const API_CONFIG = {
-    sagas: 'http://localhost:8090'      // SAGA Orchestrator
+    sagas: 'http://34.10.122.141:8000'      // SAGA Orchestrator (K8s)
 };
 
 // Global state
@@ -374,7 +374,7 @@ async function createSaga(event) {
         campana: {
             nombre: document.getElementById('campaign-name').value,
             descripcion: document.getElementById('campaign-desc').value,
-            tipo: "PROMOCIONAL",
+            tipo: "PROMOCIONAL", // Tipo válido: PROMOCIONAL, FIDELIZACION, ADQUISICION, RETENCION
             presupuesto: {
                 monto: parseFloat(document.getElementById('budget').value),
                 moneda: "USD"
@@ -430,7 +430,7 @@ async function createTestSaga() {
         campana: {
             nombre: `Campaña Test ${Date.now()}`,
             descripcion: "Campaña de prueba generada automáticamente",
-            tipo: "PROMOCIONAL",
+            tipo: "PROMOCIONAL", // Tipo válido: PROMOCIONAL, FIDELIZACION, ADQUISICION, RETENCION
             presupuesto: {
                 monto: Math.floor(Math.random() * 2000) + 500,
                 moneda: "USD"

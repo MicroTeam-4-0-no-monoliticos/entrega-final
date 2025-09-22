@@ -1,0 +1,104 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: aeropartners-ingress
+  namespace: aeropartners
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.global-static-ip-name: "aeropartners-ip"
+    networking.gke.io/managed-certificates: "aeropartners-ssl-cert"
+spec:
+  rules:
+  # Aplicación principal
+  - host: aeropartners.yourdomain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: aeropartners-service
+            port:
+              number: 8000
+  
+  # Servicios de campañas
+  - host: campaigns-svc.yourdomain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: aeropartners-service
+            port:
+              number: 8001
+  
+  - host: campaigns-replica.yourdomain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: aeropartners-service
+            port:
+              number: 8002
+  
+  # Proxy de campañas
+  - host: campaigns.yourdomain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: aeropartners-service
+            port:
+              number: 8080
+  
+  # Event Collector BFF
+  - host: events.yourdomain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: aeropartners-service
+            port:
+              number: 8090
+  
+  # SAGA Orchestrator
+  - host: saga.yourdomain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: aeropartners-service
+            port:
+              number: 8091
+  
+  # Servicios de datos
+  - host: datos-v1.yourdomain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: aeropartners-service
+            port:
+              number: 9001
+  
+  - host: datos-v2.yourdomain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: aeropartners-service
+            port:
+              number: 9002

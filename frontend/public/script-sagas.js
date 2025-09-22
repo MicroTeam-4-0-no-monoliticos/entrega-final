@@ -1,12 +1,25 @@
-// API Configuration
+// API Configuration - Kubernetes Deployment
 const API_CONFIG = {
-    sagas: 'http://localhost:8090'      // SAGA Orchestrator
+    sagas: 'http://34.10.122.141:8000'      // SAGA Orchestrator (K8s)
 };
 
 // Global state
 let currentData = {
     sagas: []
 };
+
+// Tipos de campaña válidos
+const TIPOS_CAMPANA_VALIDOS = [
+    'PROMOCIONAL',
+    'FIDELIZACION', 
+    'ADQUISICION',
+    'RETENCION'
+];
+
+// Función para validar tipo de campaña
+function validarTipoCampana(tipo) {
+    return TIPOS_CAMPANA_VALIDOS.includes(tipo);
+}
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
@@ -156,8 +169,9 @@ function showCreateSaga() {
                 <label for="campana-tipo">Tipo:</label>
                 <select id="campana-tipo" name="campana-tipo" required>
                     <option value="PROMOCIONAL">Promocional</option>
-                    <option value="INFORMATIVA">Informativa</option>
-                    <option value="EDUCATIVA">Educativa</option>
+                    <option value="FIDELIZACION">Fidelización</option>
+                    <option value="ADQUISICION">Adquisición</option>
+                    <option value="RETENCION">Retención</option>
                 </select>
             </div>
             <div class="form-group">
@@ -200,12 +214,19 @@ async function createSaga(event) {
     const formData = new FormData(event.target);
     const campanaPresupuesto = parseFloat(formData.get('campana-presupuesto'));
     const pagoMonto = parseFloat(formData.get('pago-monto'));
+    const campanaTipo = formData.get('campana-tipo');
+    
+    // Validar tipo de campaña
+    if (!validarTipoCampana(campanaTipo)) {
+        alert(`Tipo de campaña inválido: ${campanaTipo}. Tipos válidos: ${TIPOS_CAMPANA_VALIDOS.join(', ')}`);
+        return;
+    }
     
     const sagaData = {
         campana: {
             nombre: formData.get('campana-nombre'),
             descripcion: formData.get('campana-descripcion'),
-            tipo: formData.get('campana-tipo'),
+            tipo: campanaTipo,
             presupuesto: {
                 monto: campanaPresupuesto,
                 moneda: "USD"
@@ -256,11 +277,14 @@ async function createSaga(event) {
 
 // Test SAGA Creation
 async function createTestSaga() {
+    // Seleccionar un tipo de campaña válido aleatorio
+    const tipoAleatorio = TIPOS_CAMPANA_VALIDOS[Math.floor(Math.random() * TIPOS_CAMPANA_VALIDOS.length)];
+    
     const testData = {
         campana: {
-            nombre: "Campaña Test Frontend",
-            descripcion: "Campaña de prueba desde el frontend",
-            tipo: "PROMOCIONAL",
+            nombre: `Campaña Test Frontend - ${tipoAleatorio}`,
+            descripcion: `Campaña de prueba desde el frontend (${tipoAleatorio})`,
+            tipo: tipoAleatorio,
             presupuesto: {
                 monto: 1000.0,
                 moneda: "USD"

@@ -139,10 +139,32 @@ class RepositorioSagaSQLAlchemy(RepositorioSaga):
             ).delete()
             
             for compensacion in saga.compensaciones:
+                # Obtener el paso_id del paso original que se está compensando
+                paso_id_original = compensacion.datos.get('paso_id', str(compensacion.id))
+                
+                logger.info(f"Creando compensación: ID={compensacion.id}, paso_id_original={paso_id_original}")
+                
+                # Verificar que el paso_id existe en la base de datos
+                # Usar una consulta más robusta con commit explícito
+                db.commit()  # Asegurar que los pasos estén commitados
+                
+                paso_exists = db.query(SagaPasoModel).filter(
+                    SagaPasoModel.id == uuid.UUID(paso_id_original)
+                ).first()
+                
+                if not paso_exists:
+                    logger.error(f"Paso {paso_id_original} no existe en la base de datos para compensación {compensacion.id}")
+                    # Listar todos los pasos disponibles para debug
+                    all_pasos = db.query(SagaPasoModel).filter(
+                        SagaPasoModel.saga_id == uuid.UUID(str(saga.id))
+                    ).all()
+                    logger.error(f"Pasos disponibles para SAGA {saga.id}: {[str(p.id) for p in all_pasos]}")
+                    continue
+                
                 compensacion_model = SagaCompensacionModel(
                     id=uuid.UUID(compensacion.id),
                     saga_id=uuid.UUID(str(saga.id)),
-                    paso_id=uuid.UUID(compensacion.id),
+                    paso_id=uuid.UUID(paso_id_original),  # ID del paso original que se compensa
                     tipo_compensacion=compensacion.tipo.value,
                     datos=compensacion.datos,
                     resultado=compensacion.resultado,

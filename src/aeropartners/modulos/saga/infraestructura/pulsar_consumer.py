@@ -248,10 +248,39 @@ class SagaPulsarConsumer:
                 self.marcar_paso_fallido_handler.handle(comando)
                 logger.error(f"Paso {paso_pendiente.tipo.value} falló: {resultado.get('error')}")
                 
-                # Ejecutar compensaciones para pasos exitosos anteriores
+                # Marcar la SAGA como FALLIDA
+                saga.estado = EstadoSaga.FALLIDA
+                saga.error_message = resultado.get('error', 'Error desconocido')
+                saga.fecha_fin = datetime.now()
+                
+                # Marcar todos los pasos posteriores como fallidos
+                paso_actual_index = None
+                for i, paso in enumerate(saga.pasos):
+                    if paso.id == paso_pendiente.id:
+                        paso_actual_index = i
+                        break
+                
+                if paso_actual_index is not None:
+                    # Marcar todos los pasos posteriores como fallidos
+                    for i in range(paso_actual_index + 1, len(saga.pasos)):
+                        paso_posterior = saga.pasos[i]
+                        if not paso_posterior.exitoso:  # Solo si no está ya marcado como exitoso
+                            paso_posterior.marcar_fallido("SAGA falló en paso anterior")
+                            logger.info(f"Paso posterior {paso_posterior.tipo.value} marcado como fallido")
+                
+                # Primero actualizar la SAGA en la base de datos
+                self.repositorio.actualizar(saga)
+                logger.info(f"SAGA {saga.id} marcada como FALLIDA y actualizada en la base de datos")
+                
+                # Esperar un momento para asegurar que la transacción se complete
+                import time
+                time.sleep(1)
+                
+                # Luego ejecutar compensaciones para pasos exitosos anteriores
                 # Obtener la SAGA actualizada del repositorio para asegurar el estado correcto
                 saga_actualizada = self.repositorio.obtener_por_id(str(saga.id))
                 if saga_actualizada:
+                    logger.info(f"Ejecutando compensaciones para SAGA {saga_actualizada.id}")
                     self._ejecutar_compensaciones(saga_actualizada)
                 
         except Exception as e:
@@ -276,12 +305,17 @@ class SagaPulsarConsumer:
                     continue
                 
                 # Crear compensación en la SAGA
+                logger.info(f"Creando compensación para paso {paso.tipo.value} con ID {paso.id}")
                 compensacion = saga.agregar_compensacion(paso.tipo, {
                     'saga_id': str(saga.id),
-                    'paso_id': str(paso.id),
+                    'paso_id': str(paso.id),  # ID del paso original que se va a compensar
                     'tipo_compensacion': tipo_compensacion,
                     **paso.resultado
                 })
+                
+                # Asegurar que la compensación tenga el paso_id correcto del paso original
+                compensacion.datos['paso_id'] = str(paso.id)
+                logger.info(f"Compensación creada con ID {compensacion.id}, paso_id en datos: {compensacion.datos.get('paso_id')}")
                 
                 # Ejecutar compensación
                 resultado = self._ejecutar_compensacion_servicio(tipo_compensacion, {
@@ -300,6 +334,10 @@ class SagaPulsarConsumer:
                     logger.error(f"Compensación {tipo_compensacion} falló: {resultado.get('error')}")
             
             # Actualizar la SAGA en el repositorio con las compensaciones
+            logger.info(f"Guardando SAGA {saga.id} con {len(saga.compensaciones)} compensaciones")
+            for i, comp in enumerate(saga.compensaciones):
+                logger.info(f"Compensación {i+1}: ID={comp.id}, paso_id={comp.datos.get('paso_id')}, tipo={comp.tipo.value}")
+            
             self.repositorio.actualizar(saga)
             logger.info(f"SAGA {saga.id} actualizada con {len(saga.compensaciones)} compensaciones")
                     
@@ -404,7 +442,7 @@ class SagaPulsarConsumer:
             if tipo_paso == "CREAR_CAMPAÑA":
                 # Llamar al proxy de campañas
                 response = self.http_client.post(
-                    "http://campaigns-proxy:8080/api/campaigns/",
+                    "http://campaigns-proxy-service:8080/api/campaigns/",
                     json=datos
                 )
                 if response.status_code == 200:
@@ -415,7 +453,7 @@ class SagaPulsarConsumer:
             elif tipo_paso == "PROCESAR_PAGO":
                 # Llamar al servicio de pagos
                 response = self.http_client.post(
-                    "http://aeropartners-app:8000/pagos/",
+                    "http://aeropartners-service:8000/pagos/",
                     json=datos
                 )
                 if response.status_code == 200:
@@ -426,7 +464,7 @@ class SagaPulsarConsumer:
             elif tipo_paso == "GENERAR_REPORTE":
                 # Llamar al servicio de reporting
                 response = self.http_client.post(
-                    "http://aeropartners-app:8000/reporting/report",
+                    "http://aeropartners-service:8000/reporting/report",
                     json=datos
                 )
                 if response.status_code == 200:
@@ -447,7 +485,7 @@ class SagaPulsarConsumer:
                 # Llamar al proxy de campañas para cancelar
                 campana_id = datos.get("id")  # El ID de la campaña está en 'id' del resultado
                 response = self.http_client.patch(
-                    f"http://campaigns-proxy:8080/api/campaigns/{campana_id}/cancel",
+                    f"http://campaigns-proxy-service:8080/api/campaigns/{campana_id}/cancel",
                     json={"motivo": "SAGA_FALLIDA", "saga_id": datos.get('saga_id')}
                 )
                 if response.status_code == 200:
@@ -459,7 +497,7 @@ class SagaPulsarConsumer:
                 # Llamar al servicio de pagos para revertir
                 pago_id = datos.get("id_pago")  # El ID del pago está en 'id_pago' del resultado
                 response = self.http_client.patch(
-                    f"http://aeropartners-app:8000/pagos/{pago_id}/revertir",
+                    f"http://aeropartners-service:8000/pagos/{pago_id}/revertir",
                     json={"motivo": "SAGA_FALLIDA", "saga_id": datos.get('saga_id')}
                 )
                 if response.status_code == 200:
@@ -560,13 +598,35 @@ class SagaPulsarConsumer:
                         saga.error_message = mensaje_error
                         saga.fecha_fin = datetime.now()
                         
+                        # Marcar todos los pasos posteriores como fallidos
+                        paso_actual_index = None
+                        for i, p in enumerate(saga.pasos):
+                            if p.id == paso.id:
+                                paso_actual_index = i
+                                break
+                        
+                        if paso_actual_index is not None:
+                            # Marcar todos los pasos posteriores como fallidos
+                            for i in range(paso_actual_index + 1, len(saga.pasos)):
+                                paso_posterior = saga.pasos[i]
+                                if not paso_posterior.exitoso:  # Solo si no está ya marcado como exitoso
+                                    paso_posterior.marcar_fallido("SAGA falló por pago fallido")
+                                    logger.info(f"Paso posterior {paso_posterior.tipo.value} marcado como fallido por pago fallido")
+                        
                         # Actualizar la SAGA en el repositorio
                         self.repositorio.actualizar(saga)
                         logger.info(f"SAGA {saga.id} marcada como fallida por pago fallido")
                         
+                        # Esperar un momento para asegurar que la transacción se complete
+                        import time
+                        time.sleep(1)
+                        
                         # Ejecutar compensaciones (solo campaña, NO reporte)
                         logger.info(f"Ejecutando compensaciones para SAGA {saga.id} - NO se generará reporte")
-                        self._ejecutar_compensaciones(saga)
+                        # Obtener la SAGA actualizada del repositorio para asegurar el estado correcto
+                        saga_actualizada = self.repositorio.obtener_por_id(str(saga.id))
+                        if saga_actualizada:
+                            self._ejecutar_compensaciones(saga_actualizada)
                         return
                         
         except Exception as e:

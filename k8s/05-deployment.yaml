@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aeropartners-deployment
+  namespace: aeropartners
+  labels:
+    app: aeropartners
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: aeropartners
+  template:
+    metadata:
+      labels:
+        app: aeropartners
+    spec:
+      containers:
+      - name: aeropartners-main
+        image: us-central1-docker.pkg.dev/aeropartners-saga-dev/uniandes-misw4406/aeropartners-main:1.0
+        ports:
+        - containerPort: 8000
+          name: main-api
+        - containerPort: 8001
+          name: campaigns-proxy
+        - containerPort: 8002
+          name: payments-api
+        - containerPort: 8003
+          name: reporting-api
+        env:
+        # Variable principal que usa el código
+        - name: DATABASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: DATABASE_URL
+        # Variables individuales (por si se necesitan)
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: DB_PORT
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: DB_NAME
+        - name: DB_USER
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: DB_USER
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: aeropartners-secret
+              key: DB_PASSWORD
+        - name: DB_SSL_MODE
+          valueFrom:
+            secretKeyRef:
+              name: aeropartners-secret
+              key: DB_SSL_MODE
+        - name: PULSAR_SERVICE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: PULSAR_SERVICE_URL
+        - name: PULSAR_ADMIN_URL
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: PULSAR_ADMIN_URL
+        - name: CORS_ORIGINS
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: CORS_ORIGINS
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: LOG_LEVEL
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5

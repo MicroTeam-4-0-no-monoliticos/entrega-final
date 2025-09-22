@@ -1,0 +1,1061 @@
+{
+	"info": {
+		"_postman_id": "k8s-aeropartners-2024",
+		"name": "Aeropartners - Kubernetes Deployment",
+		"description": "Colección completa para probar todos los microservicios de Aeropartners desplegados en Google Kubernetes Engine (GKE)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "45740584"
+	},
+	"item": [
+		{
+			"name": "Health Checks",
+			"item": [
+				{
+					"name": "Aeropartners Principal - Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{aeropartners_k8s_url}}/health",
+							"host": [
+								"{{aeropartners_k8s_url}}"
+							],
+							"path": [
+								"health"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "SAGA Orchestrator - Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{aeropartners_k8s_url}}/saga/health",
+							"host": [
+								"{{aeropartners_k8s_url}}"
+							],
+							"path": [
+								"saga",
+								"health"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Campaigns Proxy - Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{campaigns_proxy_k8s_url}}/health",
+							"host": [
+								"{{campaigns_proxy_k8s_url}}"
+							],
+							"path": [
+								"health"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Servicio Datos v1 - Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{servicio_datos_v1_k8s_url}}/health",
+							"host": [
+								"{{servicio_datos_v1_k8s_url}}"
+							],
+							"path": [
+								"health"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Servicio Datos v2 - Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{servicio_datos_v2_k8s_url}}/health",
+							"host": [
+								"{{servicio_datos_v2_k8s_url}}"
+							],
+							"path": [
+								"health"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "SAGA Orchestrator",
+			"item": [
+				{
+					"name": "Crear Campaña Completa",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"campana\": {\n    \"nombre\": \"Campaña Test K8s\",\n    \"tipo\": \"DISPLAY\",\n    \"presupuesto\": {\n      \"monto\": 1000,\n      \"moneda\": \"USD\"\n    },\n    \"fecha_inicio\": \"2024-01-01T00:00:00Z\",\n    \"fecha_fin\": \"2024-12-31T23:59:59Z\",\n    \"id_afiliado\": \"afiliado-test-k8s\",\n    \"descripcion\": \"Campaña de prueba en Kubernetes\"\n  },\n  \"pago\": {\n    \"id_afiliado\": \"afiliado-test-k8s\",\n    \"monto\": 1000,\n    \"moneda\": \"USD\",\n    \"referencia_pago\": \"pago-test-k8s-123\"\n  },\n  \"reporte\": {\n    \"tipo_reporte\": \"CAMPAÑA_COMPLETA\",\n    \"filtros\": {\n      \"fecha_inicio\": \"2024-01-01\",\n      \"fecha_fin\": \"2024-12-31\",\n      \"afiliado_id\": \"afiliado-test-k8s\"\n    }\n  },\n  \"timeout_minutos\": 30\n}"
+						},
+						"url": {
+							"raw": "{{aeropartners_k8s_url}}/saga/crear-campana-completa",
+							"host": [
+								"{{aeropartners_k8s_url}}"
+							],
+							"path": [
+								"saga",
+								"crear-campana-completa"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Listar SAGAs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{aeropartners_k8s_url}}/saga/",
+							"host": [
+								"{{aeropartners_k8s_url}}"
+							],
+							"path": [
+								"saga",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Estado SAGA",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{aeropartners_k8s_url}}/saga/{{saga_id}}/status",
+							"host": [
+								"{{aeropartners_k8s_url}}"
+							],
+							"path": [
+								"saga",
+								"{{saga_id}}",
+								"status"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar SAGA",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{aeropartners_k8s_url}}/saga/{{saga_id}}",
+							"host": [
+								"{{aeropartners_k8s_url}}"
+							],
+							"path": [
+								"saga",
+								"{{saga_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Limpiar SAGAs",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{aeropartners_k8s_url}}/saga/cleanup",
+							"host": [
+								"{{aeropartners_k8s_url}}"
+							],
+							"path": [
+								"saga",
+								"cleanup"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Limpiar Todo",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{aeropartners_k8s_url}}/saga/cleanup-all",
+							"host": [
+								"{{aeropartners_k8s_url}}"
+							],
+							"path": [
+								"saga",
+								"cleanup-all"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Pagos",
+			"item": [
+				{
+					"name": "Procesar Pago",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id_afiliado\": \"afiliado-test-k8s\",\n  \"monto\": 500,\n  \"moneda\": \"USD\",\n  \"referencia_pago\": \"pago-k8s-001\"\n}"
+						},
+						"url": {
+							"raw": "{{aeropartners_k8s_url}}/pagos/",
+							"host": [
+								"{{aeropartners_k8s_url}}"
+							],
+							"path": [
+								"pagos",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Estado Pago",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{aeropartners_k8s_url}}/pagos/{{pago_id}}",
+							"host": [
+								"{{aeropartners_k8s_url}}"
+							],
+							"path": [
+								"pagos",
+								"{{pago_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Revertir Pago",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"motivo\": \"Compensación por falla en campaña\",\n  \"saga_id\": \"{{saga_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{aeropartners_k8s_url}}/pagos/{{pago_id}}/revertir",
+							"host": [
+								"{{aeropartners_k8s_url}}"
+							],
+							"path": [
+								"pagos",
+								"{{pago_id}}",
+								"revertir"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Limpiar Pagos",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{aeropartners_k8s_url}}/pagos/cleanup",
+							"host": [
+								"{{aeropartners_k8s_url}}"
+							],
+							"path": [
+								"pagos",
+								"cleanup"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Estadísticas Outbox Pagos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{aeropartners_k8s_url}}/pagos/outbox/estadisticas",
+							"host": [
+								"{{aeropartners_k8s_url}}"
+							],
+							"path": [
+								"pagos",
+								"outbox",
+								"estadisticas"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Campañas",
+			"item": [
+				{
+					"name": "Crear Campaña",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"Campaña K8s Test\",\n  \"tipo\": \"DISPLAY\",\n  \"presupuesto\": {\n    \"monto\": 2000,\n    \"moneda\": \"USD\"\n  },\n  \"fecha_inicio\": \"2024-01-01T00:00:00Z\",\n  \"fecha_fin\": \"2024-12-31T23:59:59Z\",\n  \"id_afiliado\": \"afiliado-k8s-001\",\n  \"descripcion\": \"Campaña de prueba en Kubernetes\"\n}"
+						},
+						"url": {
+							"raw": "{{aeropartners_k8s_url}}/api/campaigns/",
+							"host": [
+								"{{aeropartners_k8s_url}}"
+							],
+							"path": [
+								"api",
+								"campaigns",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Campañas",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{aeropartners_k8s_url}}/api/campaigns/?limit=10&offset=0",
+							"host": [
+								"{{aeropartners_k8s_url}}"
+							],
+							"path": [
+								"api",
+								"campaigns",
+								""
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Campaña",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{aeropartners_k8s_url}}/api/campaigns/{{campana_id}}",
+							"host": [
+								"{{aeropartners_k8s_url}}"
+							],
+							"path": [
+								"api",
+								"campaigns",
+								"{{campana_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar Presupuesto",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"monto\": 3000,\n  \"moneda\": \"USD\"\n}"
+						},
+						"url": {
+							"raw": "{{aeropartners_k8s_url}}/api/campaigns/{{campana_id}}/budget",
+							"host": [
+								"{{aeropartners_k8s_url}}"
+							],
+							"path": [
+								"api",
+								"campaigns",
+								"{{campana_id}}",
+								"budget"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Activar Campaña",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{aeropartners_k8s_url}}/api/campaigns/{{campana_id}}/activate",
+							"host": [
+								"{{aeropartners_k8s_url}}"
+							],
+							"path": [
+								"api",
+								"campaigns",
+								"{{campana_id}}",
+								"activate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Pausar Campaña",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{aeropartners_k8s_url}}/api/campaigns/{{campana_id}}/pause",
+							"host": [
+								"{{aeropartners_k8s_url}}"
+							],
+							"path": [
+								"api",
+								"campaigns",
+								"{{campana_id}}",
+								"pause"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Cancelar Campaña",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{aeropartners_k8s_url}}/api/campaigns/{{campana_id}}/cancel",
+							"host": [
+								"{{aeropartners_k8s_url}}"
+							],
+							"path": [
+								"api",
+								"campaigns",
+								"{{campana_id}}",
+								"cancel"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Estadísticas Generales",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{aeropartners_k8s_url}}/api/campaigns/stats/general",
+							"host": [
+								"{{aeropartners_k8s_url}}"
+							],
+							"path": [
+								"api",
+								"campaigns",
+								"stats",
+								"general"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Limpiar Campañas",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{aeropartners_k8s_url}}/api/campaigns/cleanup",
+							"host": [
+								"{{aeropartners_k8s_url}}"
+							],
+							"path": [
+								"api",
+								"campaigns",
+								"cleanup"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Reporting",
+			"item": [
+				{
+					"name": "Generar Reporte",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"tipo_reporte\": \"CAMPAÑA_COMPLETA\",\n  \"filtros\": {\n    \"fecha_inicio\": \"2024-01-01\",\n    \"fecha_fin\": \"2024-12-31\",\n    \"afiliado_id\": \"afiliado-test-k8s\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{aeropartners_k8s_url}}/reporting/report",
+							"host": [
+								"{{aeropartners_k8s_url}}"
+							],
+							"path": [
+								"reporting",
+								"report"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Reporte",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{aeropartners_k8s_url}}/reporting/report/{{reporte_id}}",
+							"host": [
+								"{{aeropartners_k8s_url}}"
+							],
+							"path": [
+								"reporting",
+								"report",
+								"{{reporte_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Reportes",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{aeropartners_k8s_url}}/reporting/reports?limite=10",
+							"host": [
+								"{{aeropartners_k8s_url}}"
+							],
+							"path": [
+								"reporting",
+								"reports"
+							],
+							"query": [
+								{
+									"key": "limite",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar Servicio Datos",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"url\": \"{{servicio_datos_v2_k8s_url}}\",\n  \"version\": \"v2\"\n}"
+						},
+						"url": {
+							"raw": "{{aeropartners_k8s_url}}/reporting/admin/servicio-datos",
+							"host": [
+								"{{aeropartners_k8s_url}}"
+							],
+							"path": [
+								"reporting",
+								"admin",
+								"servicio-datos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Configuración",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{aeropartners_k8s_url}}/reporting/admin/configuracion",
+							"host": [
+								"{{aeropartners_k8s_url}}"
+							],
+							"path": [
+								"reporting",
+								"admin",
+								"configuracion"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Verificar Servicio",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{aeropartners_k8s_url}}/reporting/admin/verificar-servicio?url={{servicio_datos_v1_k8s_url}}",
+							"host": [
+								"{{aeropartners_k8s_url}}"
+							],
+							"path": [
+								"reporting",
+								"admin",
+								"verificar-servicio"
+							],
+							"query": [
+								{
+									"key": "url",
+									"value": "{{servicio_datos_v1_k8s_url}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Event Collector BFF",
+			"item": [
+				{
+					"name": "Procesar Evento Tracking",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"tipo_evento\": \"CLICK\",\n  \"id_afiliado\": \"afiliado-test-k8s\",\n  \"id_campana\": \"{{campana_id}}\",\n  \"url\": \"https://example.com/click\",\n  \"valor_conversion\": 25.50,\n  \"moneda\": \"USD\",\n  \"tipo_dispositivo\": \"DESKTOP\",\n  \"navegador\": \"Chrome\",\n  \"sistema_operativo\": \"Windows 10\"\n}"
+						},
+						"url": {
+							"raw": "{{aeropartners_k8s_url}}/event-collector/events",
+							"host": [
+								"{{aeropartners_k8s_url}}"
+							],
+							"path": [
+								"event-collector",
+								"events"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Estado Evento",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{aeropartners_k8s_url}}/event-collector/events/{{evento_id}}/status",
+							"host": [
+								"{{aeropartners_k8s_url}}"
+							],
+							"path": [
+								"event-collector",
+								"events",
+								"{{evento_id}}",
+								"status"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Reprocesar Evento Fallido",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id_evento\": \"{{evento_id}}\",\n  \"forzar_reproceso\": true\n}"
+						},
+						"url": {
+							"raw": "{{aeropartners_k8s_url}}/event-collector/events/{{evento_id}}/retry",
+							"host": [
+								"{{aeropartners_k8s_url}}"
+							],
+							"path": [
+								"event-collector",
+								"events",
+								"{{evento_id}}",
+								"retry"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Estadísticas Processing",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{aeropartners_k8s_url}}/event-collector/statistics?id_afiliado=afiliado-test-k8s",
+							"host": [
+								"{{aeropartners_k8s_url}}"
+							],
+							"path": [
+								"event-collector",
+								"statistics"
+							],
+							"query": [
+								{
+									"key": "id_afiliado",
+									"value": "afiliado-test-k8s"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Eventos Fallidos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{aeropartners_k8s_url}}/event-collector/failed-events?limite=10",
+							"host": [
+								"{{aeropartners_k8s_url}}"
+							],
+							"path": [
+								"event-collector",
+								"failed-events"
+							],
+							"query": [
+								{
+									"key": "limite",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Rate Limit Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{aeropartners_k8s_url}}/event-collector/rate-limit/afiliado-test-k8s",
+							"host": [
+								"{{aeropartners_k8s_url}}"
+							],
+							"path": [
+								"event-collector",
+								"rate-limit",
+								"afiliado-test-k8s"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Servicios de Datos Mock",
+			"item": [
+				{
+					"name": "Servicio Datos v1 - Generar Datos",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"tipo_datos\": \"reporte_campana\",\n  \"filtros\": {\n    \"fecha_inicio\": \"2024-01-01\",\n    \"fecha_fin\": \"2024-12-31\",\n    \"afiliado_id\": \"afiliado-test-k8s\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{servicio_datos_v1_k8s_url}}/generar-datos",
+							"host": [
+								"{{servicio_datos_v1_k8s_url}}"
+							],
+							"path": [
+								"generar-datos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Servicio Datos v2 - Generar Datos",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"tipo_datos\": \"reporte_campana\",\n  \"filtros\": {\n    \"fecha_inicio\": \"2024-01-01\",\n    \"fecha_fin\": \"2024-12-31\",\n    \"afiliado_id\": \"afiliado-test-k8s\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{servicio_datos_v2_k8s_url}}/generar-datos",
+							"host": [
+								"{{servicio_datos_v2_k8s_url}}"
+							],
+							"path": [
+								"generar-datos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Servicio Datos v1 - Listar Datos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{servicio_datos_v1_k8s_url}}/datos?tipo=reporte_campana&limite=10",
+							"host": [
+								"{{servicio_datos_v1_k8s_url}}"
+							],
+							"path": [
+								"datos"
+							],
+							"query": [
+								{
+									"key": "tipo",
+									"value": "reporte_campana"
+								},
+								{
+									"key": "limite",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Servicio Datos v2 - Listar Datos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{servicio_datos_v2_k8s_url}}/datos?tipo=reporte_campana&limite=10",
+							"host": [
+								"{{servicio_datos_v2_k8s_url}}"
+							],
+							"path": [
+								"datos"
+							],
+							"query": [
+								{
+									"key": "tipo",
+									"value": "reporte_campana"
+								},
+								{
+									"key": "limite",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Documentación API",
+			"item": [
+				{
+					"name": "OpenAPI JSON",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{aeropartners_k8s_url}}/openapi.json",
+							"host": [
+								"{{aeropartners_k8s_url}}"
+							],
+							"path": [
+								"openapi.json"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Swagger UI",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{aeropartners_k8s_url}}/docs",
+							"host": [
+								"{{aeropartners_k8s_url}}"
+							],
+							"path": [
+								"docs"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "aeropartners_k8s_url",
+			"value": "http://34.10.122.141:8000",
+			"type": "string"
+		},
+		{
+			"key": "campaigns_proxy_k8s_url",
+			"value": "http://34.10.122.141:8080",
+			"type": "string"
+		},
+		{
+			"key": "servicio_datos_v1_k8s_url",
+			"value": "http://34.10.122.141:9001",
+			"type": "string"
+		},
+		{
+			"key": "servicio_datos_v2_k8s_url",
+			"value": "http://34.10.122.141:9002",
+			"type": "string"
+		},
+		{
+			"key": "saga_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "pago_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "campana_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "reporte_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "evento_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

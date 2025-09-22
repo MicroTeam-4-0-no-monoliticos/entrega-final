@@ -29,6 +29,7 @@ python3 -m http.server 3000
 
 - **URL**: `http://localhost:3000` (Python) o `http://127.0.0.1:5500` (Live Server)
 - **Puerto**: 3000 (Python) o 5500 (Live Server)
+- **Backend**: Conectado a servicios desplegados en Kubernetes (GKE)
 
 ### 3. Funcionalidades Disponibles
 
@@ -54,15 +55,15 @@ python3 -m http.server 3000
 
 El frontend necesita que estén funcionando:
 
-1. **SAGA Orchestrator** (Puerto 8090)
-   - URL: `http://localhost:8090`
+1. **SAGA Orchestrator** (Kubernetes - GKE)
+   - URL: `http://34.10.122.141:8000`
    - Health: `GET /health`
 
 ### Variables de Configuración
 
 ```javascript
 const API_CONFIG = {
-    sagas: 'http://localhost:8090'      // SAGA Orchestrator
+    sagas: 'http://34.10.122.141:8000'      // SAGA Orchestrator (K8s)
 };
 ```
 
@@ -110,7 +111,7 @@ const API_CONFIG = {
 
 ### Error de CORS
 ```
-Access to fetch at 'http://localhost:8090/saga/' from origin 'http://127.0.0.1:5500' has been blocked by CORS policy
+Access to fetch at 'http://34.10.122.141:8000/saga/' from origin 'http://127.0.0.1:5500' has been blocked by CORS policy
 ```
 **Solución**: El SAGA Orchestrator ya tiene CORS configurado. Verificar que esté funcionando.
 
@@ -122,7 +123,7 @@ Error loading SAGAs: TypeError: Failed to fetch
 
 ### SAGAs No Se Cargan
 **Solución**: 
-1. Verificar conexión con `http://localhost:8090/health`
+1. Verificar conexión con `http://34.10.122.141:8000/health`
 2. Verificar que haya SAGAs en el sistema
 3. Revisar la consola del navegador para errores
 

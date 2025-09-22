@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pulsar-deployment
+  namespace: aeropartners
+  labels:
+    app: pulsar
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pulsar
+  template:
+    metadata:
+      labels:
+        app: pulsar
+    spec:
+      containers:
+      - name: pulsar
+        image: apachepulsar/pulsar:3.1.0
+        command: ["bash", "-c"]
+        args:
+          - "bin/pulsar standalone --no-functions-worker --no-stream-storage"
+        ports:
+        - containerPort: 6650
+          name: pulsar
+        - containerPort: 8080
+          name: admin
+        env:
+        - name: PULSAR_MEM
+          value: "-Xms512m -Xmx512m -XX:MaxDirectMemorySize=1g"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /admin/v2/clusters
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /admin/v2/clusters
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10

@@ -88,6 +88,38 @@ class GeneradorReporteService:
             },
             version_servicio_datos="unknown"
         )
+    
+    async def generar_reporte_campana_completa(self, filtros: FiltrosReporte) -> Reporte:
+        """Genera un reporte completo de campaña para SAGAs"""
+        # Obtener datos de campañas y pagos
+        datos_campanas = await self.servicio_datos.obtener_datos_campanas(filtros)
+        datos_pagos = await self.servicio_datos.obtener_datos_pagos(filtros)
+        
+        # Combinar datos para reporte completo
+        datos_completos = {
+            'campanas': datos_campanas.get('campanas', []),
+            'pagos': datos_pagos.get('pagos', []),
+            'resumen': {
+                'total_campanas': len(datos_campanas.get('campanas', [])),
+                'total_pagos': len(datos_pagos.get('pagos', [])),
+                'monto_total_pagos': sum(p.get('monto', 0) for p in datos_pagos.get('pagos', [])),
+                'campanas_activas': len([c for c in datos_campanas.get('campanas', []) if c.get('estado') == 'ACTIVA']),
+                'pagos_exitosos': len([p for p in datos_pagos.get('pagos', []) if p.get('estado') == 'EXITOSO'])
+            }
+        }
+        
+        return Reporte(
+            id=f"campana_completa_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}",
+            tipo="CAMPAÑA_COMPLETA",
+            fecha_generacion=datetime.utcnow(),
+            datos=datos_completos,
+            metadatos={
+                'filtros_aplicados': filtros.to_dict(),
+                'fecha_generacion': datetime.utcnow().isoformat(),
+                'tipo_saga': 'CREAR_CAMPANA_COMPLETA'
+            },
+            version_servicio_datos="unknown"
+        )
 
 
 class ConfiguracionService:
