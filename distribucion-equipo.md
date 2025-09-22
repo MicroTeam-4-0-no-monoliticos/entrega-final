@@ -5,7 +5,6 @@
 **Nombre del Repositorio:** entrega-final  
 **Organización:** MicroTeam-4-0-no-monoliticos  
 **Rama Principal:** main  
-**Rama de Desarrollo Actual:** feature/saga  
 
 ## Integrantes del Equipo
 
