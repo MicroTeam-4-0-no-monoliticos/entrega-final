@@ -4,6 +4,7 @@ from typing import Optional
 from datetime import datetime
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 import httpx
 import uvicorn
 
@@ -15,6 +16,15 @@ INTERVAL = float(os.getenv("HEALTH_CHECK_INTERVAL", "2"))
 MAX_FAILS = int(os.getenv("MAX_CONSECUTIVE_FAILURES", "3"))
 
 app = FastAPI(title="Campaigns Proxy", version="1.0.0")
+
+# Configurar CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/")
 async def root():

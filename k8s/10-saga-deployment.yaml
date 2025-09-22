@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: saga-orchestrator-deployment
+  namespace: aeropartners
+  labels:
+    app: saga-orchestrator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: saga-orchestrator
+  template:
+    metadata:
+      labels:
+        app: saga-orchestrator
+    spec:
+      containers:
+      - name: saga-orchestrator
+        image: us-central1-docker.pkg.dev/aeropartners-saga-dev/uniandes-misw4406/aeropartners-main:1.0
+        ports:
+        - containerPort: 8091
+          name: saga-orch
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: DATABASE_URL
+        - name: PULSAR_URL
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: PULSAR_URL
+        - name: PORT
+          value: "8091"
+        command: ["sh", "-c"]
+        args:
+          - |
+            echo 'Esperando a que los servicios estén listos...' &&
+            sleep 30 &&
+            echo 'Iniciando SAGA Orchestrator...' &&
+            python -m uvicorn src.aeropartners.main:app --host 0.0.0.0 --port 8091
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8091
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8091
+          initialDelaySeconds: 5
+          periodSeconds: 5

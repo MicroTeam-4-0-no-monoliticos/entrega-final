@@ -6,9 +6,11 @@ from .api.pagos import router as pagos_router
 from .api.campanas import router as campanas_router
 from .api.reporting import router as reporting_router
 from .api.event_collector import router as event_collector_router
+from .api.saga import router as saga_router
 from .seedwork.infraestructura.db import engine
 from .modulos.pagos.infraestructura.modelos import Base
 from .modulos.campanas.infraestructura.modelos import CampanaModel, EventInboxModel, OutboxCampanasModel
+from .modulos.saga.infraestructura.modelos import SagaLogModel, SagaPasoModel, SagaCompensacionModel, SagaEventModel
 
 # Crear las tablas en la base de datos
 Base.metadata.create_all(bind=engine)
@@ -33,6 +35,7 @@ app.include_router(pagos_router)
 app.include_router(campanas_router)
 app.include_router(reporting_router)
 app.include_router(event_collector_router)
+app.include_router(saga_router)
 
 # Normalizar errores de validación
 @app.exception_handler(RequestValidationError)

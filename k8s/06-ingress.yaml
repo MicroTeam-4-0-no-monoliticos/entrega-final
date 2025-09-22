@@ -1,0 +1,51 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: aeropartners-ingress
+  namespace: aeropartners
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.global-static-ip-name: "aeropartners-ip"
+    networking.gke.io/managed-certificates: "aeropartners-ssl-cert"
+spec:
+  rules:
+  - host: aeropartners.yourdomain.com  # Cambiar por tu dominio
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: aeropartners-service
+            port:
+              number: 8000
+  - host: campaigns.yourdomain.com  # Cambiar por tu dominio
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: aeropartners-service
+            port:
+              number: 8001
+  - host: payments.yourdomain.com  # Cambiar por tu dominio
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: aeropartners-service
+            port:
+              number: 8002
+  - host: reporting.yourdomain.com  # Cambiar por tu dominio
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: aeropartners-service
+            port:
+              number: 8003

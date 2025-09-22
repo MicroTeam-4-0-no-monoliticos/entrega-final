@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: servicio-datos-v1-deployment
+  namespace: aeropartners
+  labels:
+    app: servicio-datos-v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: servicio-datos-v1
+  template:
+    metadata:
+      labels:
+        app: servicio-datos-v1
+    spec:
+      containers:
+      # Servicio de Datos v1
+      - name: servicio-datos-v1
+        image: us-central1-docker.pkg.dev/aeropartners-saga-dev/uniandes-misw4406/servicio-datos-v1:1.0
+        ports:
+        - containerPort: 8000
+          name: datos-v1
+        env:
+        - name: SERVICE_VERSION
+          value: "v1"
+        - name: SERVICE_PORT
+          value: "8000"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "50m"
+          limits:
+            memory: "256Mi"
+            cpu: "100m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: servicio-datos-v1-service
+  namespace: aeropartners
+spec:
+  selector:
+    app: servicio-datos-v1
+  ports:
+    - name: datos-v1
+      protocol: TCP
+      port: 8000
+      targetPort: 8000
+  type: ClusterIP

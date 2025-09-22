@@ -15,6 +15,7 @@ class TipoReporte(Enum):
     METRICAS_GENERALES = "metricas_generales"
     AFILIADOS_TOP = "afiliados_top"
     RESUMEN_EJECUTIVO = "resumen_ejecutivo"
+    CAMPAÑA_COMPLETA = "CAMPAÑA_COMPLETA"
 
 
 @dataclass(frozen=True)

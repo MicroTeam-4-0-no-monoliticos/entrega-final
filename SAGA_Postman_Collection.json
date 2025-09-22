@@ -1,0 +1,236 @@
+{
+  "info": {
+    "name": "Aeropartners SAGA API",
+    "description": "Colección para probar la SAGA de campaña completa",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health Checks",
+      "item": [
+        {
+          "name": "BFF Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8090/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["health"]
+            }
+          }
+        },
+        {
+          "name": "SAGA Orchestrator Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8091/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8091",
+              "path": ["health"]
+            }
+          }
+        },
+        {
+          "name": "Campaigns Proxy Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["health"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SAGA Operations",
+      "item": [
+        {
+          "name": "Crear SAGA Campaña Completa",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"campana\": {\n    \"nombre\": \"Campaña SAGA Test\",\n    \"tipo\": \"PROMOCIONAL\",\n    \"presupuesto\": {\n      \"monto\": 1000.0,\n      \"moneda\": \"USD\"\n    },\n    \"fecha_inicio\": \"2025-01-01T00:00:00\",\n    \"fecha_fin\": \"2025-12-31T23:59:59\",\n    \"id_afiliado\": \"afiliado_test\",\n    \"descripcion\": \"Campaña de prueba para SAGA\"\n  },\n  \"pago\": {\n    \"id_afiliado\": \"afiliado_test\",\n    \"monto\": 1000.0,\n    \"moneda\": \"USD\",\n    \"referencia_pago\": \"test_payment\"\n  },\n  \"reporte\": {\n    \"tipo_reporte\": \"metricas_generales\",\n    \"filtros\": {\n      \"fecha_inicio\": \"2025-01-01\",\n      \"fecha_fin\": \"2025-12-31\"\n    }\n  },\n  \"timeout_minutos\": 30\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8090/saga/crear-campana-completa",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["saga", "crear-campana-completa"]
+            }
+          }
+        },
+        {
+          "name": "Listar todas las SAGAs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8090/saga/",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["saga", ""]
+            }
+          }
+        },
+        {
+          "name": "Obtener estado de SAGA específica",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8090/saga/{{saga_id}}/status",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["saga", "{{saga_id}}", "status"],
+              "variable": [
+                {
+                  "key": "saga_id",
+                  "value": "REPLACE_WITH_ACTUAL_SAGA_ID",
+                  "description": "ID de la SAGA obtenido de la respuesta de crear SAGA"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Eliminar SAGA",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8090/saga/{{saga_id}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["saga", "{{saga_id}}"],
+              "variable": [
+                {
+                  "key": "saga_id",
+                  "value": "REPLACE_WITH_ACTUAL_SAGA_ID",
+                  "description": "ID de la SAGA a eliminar"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Servicios Individuales",
+      "item": [
+        {
+          "name": "Crear Campaña (Directo) - /api/campaigns/",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Campaña Directa\",\n  \"tipo\": \"PROMOCIONAL\",\n  \"presupuesto\": {\n    \"monto\": 500.0,\n    \"moneda\": \"USD\"\n  },\n  \"fecha_inicio\": \"2025-01-01T00:00:00\",\n  \"fecha_fin\": \"2025-12-31T23:59:59\",\n  \"id_afiliado\": \"afiliado_directo\",\n  \"descripcion\": \"Campaña directa sin SAGA\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/campaigns/",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "campaigns", ""]
+            }
+          }
+        },
+        {
+          "name": "Procesar Pago (Directo)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_afiliado\": \"afiliado_directo\",\n  \"monto\": 500.0,\n  \"moneda\": \"USD\",\n  \"referencia_pago\": \"direct_payment\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8000/pagos/",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["pagos", ""]
+            }
+          }
+        },
+        {
+          "name": "Generar Reporte (Directo) - /reporting/report",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo_reporte\": \"metricas_generales\",\n  \"filtros\": {\n    \"fecha_inicio\": \"2025-01-01\",\n    \"fecha_fin\": \"2025-12-31\"\n  }\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8000/reporting/report",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["reporting", "report"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url_bff",
+      "value": "http://localhost:8090",
+      "type": "string"
+    },
+    {
+      "key": "base_url_saga",
+      "value": "http://localhost:8091",
+      "type": "string"
+    },
+    {
+      "key": "base_url_proxy",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "base_url_app",
+      "value": "http://localhost:8000",
+      "type": "string"
+    }
+  ]
+}

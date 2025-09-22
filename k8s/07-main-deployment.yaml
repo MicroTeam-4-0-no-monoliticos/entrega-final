@@ -1,0 +1,344 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aeropartners-deployment
+  namespace: aeropartners
+  labels:
+    app: aeropartners
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: aeropartners
+  template:
+    metadata:
+      labels:
+        app: aeropartners
+    spec:
+      containers:
+      # Contenedor principal (aeropartners)
+      - name: aeropartners-main
+        image: us-central1-docker.pkg.dev/aeropartners-saga-dev/uniandes-misw4406/aeropartners-main:1.0
+        ports:
+        - containerPort: 8000
+          name: main-api
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: DATABASE_URL
+        - name: PULSAR_URL
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: PULSAR_URL
+        - name: PULSAR_ADMIN_URL
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: PULSAR_ADMIN_URL
+        command: ["sh", "-c"]
+        args:
+          - |
+            echo 'Esperando a que los servicios estén listos...' &&
+            sleep 15 &&
+            echo 'Iniciando aplicación principal...' &&
+            python -m uvicorn src.aeropartners.main:app --host 0.0.0.0 --port 8000
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+
+      # Servicio de Campañas - Primario
+      - name: campaigns-svc
+        image: us-central1-docker.pkg.dev/aeropartners-saga-dev/uniandes-misw4406/aeropartners-main:1.0
+        ports:
+        - containerPort: 8000
+          name: campaigns-svc
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: DATABASE_URL
+        - name: PULSAR_URL
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: PULSAR_URL
+        - name: PULSAR_ADMIN_URL
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: PULSAR_ADMIN_URL
+        - name: SERVICE_NAME
+          value: "campaigns-svc"
+        - name: SUBSCRIPTION_TYPE
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: SUBSCRIPTION_TYPE
+        - name: SUBSCRIPTION_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: SUBSCRIPTION_NAME
+        command: ["sh", "-c"]
+        args:
+          - |
+            echo 'Esperando a que los servicios estén listos...' &&
+            sleep 20 &&
+            echo 'Iniciando servicio de campañas primario...' &&
+            python -m uvicorn src.aeropartners.main:app --host 0.0.0.0 --port 8000
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+
+      # Servicio de Campañas - Réplica
+      - name: campaigns-svc-replica
+        image: us-central1-docker.pkg.dev/aeropartners-saga-dev/uniandes-misw4406/aeropartners-main:1.0
+        ports:
+        - containerPort: 8000
+          name: campaigns-repl
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: DATABASE_URL
+        - name: PULSAR_URL
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: PULSAR_URL
+        - name: PULSAR_ADMIN_URL
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: PULSAR_ADMIN_URL
+        - name: SERVICE_NAME
+          value: "campaigns-svc-replica"
+        - name: SUBSCRIPTION_TYPE
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: SUBSCRIPTION_TYPE
+        - name: SUBSCRIPTION_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: SUBSCRIPTION_NAME
+        command: ["sh", "-c"]
+        args:
+          - |
+            echo 'Esperando a que los servicios estén listos...' &&
+            sleep 25 &&
+            echo 'Iniciando servicio de campañas réplica...' &&
+            python -m uvicorn src.aeropartners.main:app --host 0.0.0.0 --port 8000
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+
+      # Proxy de Campañas
+      - name: campaigns-proxy
+        image: us-central1-docker.pkg.dev/aeropartners-saga-dev/uniandes-misw4406/campaigns-proxy:1.0
+        ports:
+        - containerPort: 8080
+          name: campaigns-proxy
+        env:
+        - name: PRIMARY_SERVICE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: PRIMARY_SERVICE_URL
+        - name: REPLICA_SERVICE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: REPLICA_SERVICE_URL
+        - name: HEALTH_CHECK_INTERVAL
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: HEALTH_CHECK_INTERVAL
+        - name: HEALTH_CHECK_TIMEOUT
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: HEALTH_CHECK_TIMEOUT
+        - name: MAX_CONSECUTIVE_FAILURES
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: MAX_CONSECUTIVE_FAILURES
+        - name: PORT
+          value: "8080"
+        command: ["python", "main.py"]
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"
+
+      # Event Collector BFF
+      - name: event-collector-bff
+        image: us-central1-docker.pkg.dev/aeropartners-saga-dev/uniandes-misw4406/aeropartners-main:1.0
+        ports:
+        - containerPort: 8080
+          name: event-collector
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: DATABASE_URL
+        - name: PULSAR_URL
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: PULSAR_URL
+        - name: USE_REDIS
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: USE_REDIS
+        - name: PORT
+          value: "8080"
+        - name: HOST
+          value: "0.0.0.0"
+        command: ["sh", "-c"]
+        args:
+          - |
+            echo 'Esperando a que Pulsar esté listo...' &&
+            sleep 20 &&
+            echo 'Iniciando Event Collector BFF...' &&
+            python -m uvicorn src.aeropartners.main:app --host 0.0.0.0 --port 8080
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"
+
+      # SAGA Orchestrator
+      - name: saga-orchestrator
+        image: us-central1-docker.pkg.dev/aeropartners-saga-dev/uniandes-misw4406/aeropartners-main:1.0
+        ports:
+        - containerPort: 8091
+          name: saga-orch
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: DATABASE_URL
+        - name: PULSAR_URL
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: PULSAR_URL
+        - name: PORT
+          value: "8091"
+        command: ["sh", "-c"]
+        args:
+          - |
+            echo 'Esperando a que los servicios estén listos...' &&
+            sleep 30 &&
+            echo 'Iniciando SAGA Orchestrator...' &&
+            python -m uvicorn src.aeropartners.main:app --host 0.0.0.0 --port 8091
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8091
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8091
+          initialDelaySeconds: 5
+          periodSeconds: 5
+
+      # Servicio de Datos v1
+      - name: servicio-datos-v1
+        image: us-central1-docker.pkg.dev/aeropartners-saga-dev/uniandes-misw4406/aeropartners-main:1.0
+        ports:
+        - containerPort: 8000
+          name: datos-v1
+        env:
+        - name: SERVICE_VERSION
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: SERVICE_VERSION_V1
+        - name: SERVICE_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: SERVICE_PORT
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "50m"
+          limits:
+            memory: "256Mi"
+            cpu: "100m"
+
+      # Servicio de Datos v2
+      - name: servicio-datos-v2
+        image: us-central1-docker.pkg.dev/aeropartners-saga-dev/uniandes-misw4406/aeropartners-main:1.0
+        ports:
+        - containerPort: 8000
+          name: datos-v2
+        env:
+        - name: SERVICE_VERSION
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: SERVICE_VERSION_V2
+        - name: SERVICE_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: SERVICE_PORT
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "50m"
+          limits:
+            memory: "256Mi"
+            cpu: "100m"

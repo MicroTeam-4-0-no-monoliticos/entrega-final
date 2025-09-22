@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AeroPartners SAGA - Kubernetes Deployment</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-sync-alt"></i> AeroPartners SAGA Orchestrator</h1>
+                <p class="subtitle">Sistema de Orquestación de SAGAs - Desplegado en Kubernetes (GKE)</p>
+                
+                <!-- Service Status -->
+                <div class="service-status">
+                    <div class="status-item">
+                        <span class="status-dot" id="sagas-status"></span>
+                        <span>SAGA Orchestrator (K8s)</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="main-nav">
+            <button class="nav-btn active" onclick="showSection('sagas')">
+                <i class="fas fa-sync-alt"></i> SAGAs
+            </button>
+        </nav>
+
+        <!-- Main Content -->
+        <main>
+            <!-- SAGAs Section -->
+            <section id="sagas" class="section active">
+                <div class="section-header">
+                    <h2><i class="fas fa-sync-alt"></i> SAGAs</h2>
+                    <div class="section-actions">
+                        <button onclick="loadSagas()" class="btn btn-secondary">
+                            <i class="fas fa-sync-alt"></i> Actualizar
+                        </button>
+                        <button onclick="showCreateSaga()" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Crear SAGA
+                        </button>
+                        <button onclick="createTestSaga()" class="btn btn-success">
+                            <i class="fas fa-flask"></i> SAGA Test
+                        </button>
+                    </div>
+                </div>
+                <div id="sagas-list" class="content-list">
+                    <div class="loading">Cargando SAGAs...</div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="config-k8s.js"></script>
+    <script src="script-sagas.js"></script>
+    
+    <script>
+        // Override API_CONFIG with K8s configuration
+        const API_CONFIG = API_CONFIG_K8S;
+        console.log('Frontend configurado para Kubernetes:', API_CONFIG);
+        console.log('Tipos de campaña válidos:', TIPOS_CAMPANA_VALIDOS);
+    </script>
+</body>
+</html>

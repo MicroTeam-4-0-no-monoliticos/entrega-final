@@ -1,0 +1,11 @@
+{
+  "hosting": {
+    "site": "misw-4406-entrega-final",
+    "public": "public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}

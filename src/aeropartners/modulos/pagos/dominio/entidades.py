@@ -63,3 +63,11 @@ class Pago:
                 referencia_pago=self.referencia_pago,
                 mensaje_error=str(e)
             ))
+    
+    def revertir(self, motivo: str, saga_id: str = None):
+        """Revertir un pago (compensación)"""
+        self.estado = EstadoPago.REVERSADO
+        self.mensaje_error = f"Revertido: {motivo}"
+        if saga_id:
+            self.mensaje_error += f" (SAGA: {saga_id})"
+        self.fecha_actualizacion = datetime.now()

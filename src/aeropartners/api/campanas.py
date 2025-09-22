@@ -440,3 +440,29 @@ async def obtener_estadisticas_outbox(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error obteniendo estadísticas: {str(e)}")
 
+@router.delete("/cleanup")
+async def limpiar_campanas(
+    repositorio: RepositorioCampanasSQLAlchemy = Depends(get_repositorio_campanas)
+):
+    """Limpiar todas las campañas (solo para pruebas)"""
+    try:
+        # Obtener todas las campañas
+        campanas = repositorio.obtener_todas()
+        total_campanas = len(campanas)
+        
+        # Eliminar todas las campañas
+        for campana in campanas:
+            repositorio.eliminar(str(campana.id))
+        
+        return {
+            "mensaje": f"Se eliminaron {total_campanas} campañas",
+            "total_eliminadas": total_campanas,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error limpiando campañas: {str(e)}"
+        )
+

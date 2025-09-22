@@ -137,6 +137,15 @@ class RepositorioCampanasSQLAlchemy(RepositorioCampanas):
             logger.error(f"Error eliminando campaña {id_campana}: {str(e)}")
             raise
     
+    def obtener_todas(self) -> List[Campana]:
+        """Obtener todas las campañas"""
+        try:
+            modelos = self.db_session.query(CampanaModel).all()
+            return [MapeadorCampana.modelo_a_entidad(modelo) for modelo in modelos]
+        except Exception as e:
+            logger.error(f"Error obteniendo todas las campañas: {str(e)}")
+            raise
+    
     def _procesar_eventos_dominio(self, campana: Campana):
         """Procesar eventos de dominio usando el patrón Outbox"""
         for evento in campana.eventos:
