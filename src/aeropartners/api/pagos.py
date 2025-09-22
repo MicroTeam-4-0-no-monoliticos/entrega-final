@@ -2,9 +2,10 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional
 import uuid
-from ..modulos.pagos.aplicacion.comandos import ProcesarPagoCommand
+from datetime import datetime
+from ..modulos.pagos.aplicacion.comandos import ProcesarPagoCommand, RevertirPagoCommand
 from ..modulos.pagos.aplicacion.queries import ObtenerEstadoPagoQuery
-from ..modulos.pagos.aplicacion.handlers import ProcesarPagoHandler, ObtenerEstadoPagoHandler
+from ..modulos.pagos.aplicacion.handlers import ProcesarPagoHandler, ObtenerEstadoPagoHandler, RevertirPagoHandler
 from ..modulos.pagos.infraestructura.adaptadores import RepositorioPagosSQLAlchemy, StripeAdapter
 from ..modulos.pagos.infraestructura.outbox import OutboxProcessor
 
@@ -35,6 +36,15 @@ class ProcesarPagoResponse(BaseModel):
     estado: str
     referencia_pago: str
     fecha_creacion: str
+    mensaje: str
+
+class RevertirPagoRequest(BaseModel):
+    motivo: str
+    saga_id: Optional[str] = None
+
+class RevertirPagoResponse(BaseModel):
+    id_pago: str
+    estado: str
     mensaje: str
 
 class EstadoPagoResponse(BaseModel):
@@ -119,6 +129,59 @@ async def obtener_estado_pago(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error interno del servidor: {str(e)}")
 
+@router.patch("/{id_pago}/revertir", response_model=RevertirPagoResponse)
+async def revertir_pago(
+    id_pago: str,
+    request: RevertirPagoRequest,
+    repositorio: RepositorioPagosSQLAlchemy = Depends(get_repositorio_pagos)
+):
+    """Revertir un pago (compensación)"""
+    try:
+        comando = RevertirPagoCommand(
+            id_pago=uuid.UUID(id_pago),
+            motivo=request.motivo,
+            saga_id=request.saga_id
+        )
+        
+        handler = RevertirPagoHandler(repositorio)
+        pago = handler.handle(comando)
+        
+        return RevertirPagoResponse(
+            id_pago=str(pago.id),
+            estado=pago.estado.value,
+            mensaje=f"Pago revertido: {request.motivo}"
+        )
+        
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error interno del servidor: {str(e)}")
+
+@router.delete("/cleanup")
+async def limpiar_pagos(
+    repositorio: RepositorioPagosSQLAlchemy = Depends(get_repositorio_pagos)
+):
+    """Limpiar todos los pagos (solo para pruebas)"""
+    try:
+        # Obtener todos los pagos
+        pagos = repositorio.obtener_todos()
+        total_pagos = len(pagos)
+        
+        # Eliminar todos los pagos
+        for pago in pagos:
+            repositorio.eliminar(pago)
+        
+        return {
+            "mensaje": f"Se eliminaron {total_pagos} pagos",
+            "total_eliminados": total_pagos,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error limpiando pagos: {str(e)}"
+        )
 
 @router.get("/outbox/estadisticas", response_model=OutboxStatsResponse)
 async def obtener_estadisticas_outbox(

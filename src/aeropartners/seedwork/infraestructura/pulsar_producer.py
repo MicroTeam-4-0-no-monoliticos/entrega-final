@@ -22,10 +22,10 @@ class PulsarEventProducer:
             self.client = Client(self.pulsar_url)
             self.producer = self.client.create_producer(
                 self.topic,
-                send_timeout_millis=1000,
+                send_timeout_millis=30000,  # Aumentar timeout a 30 segundos
                 batching_enabled=True,
                 batching_max_messages=100,
-                batching_max_publish_delay_ms=10
+                batching_max_publish_delay_ms=1000  # Aumentar delay de batching
             )
             logger.info(f"Conectado a Pulsar en {self.pulsar_url}, topic: {self.topic}")
         except Exception as e:

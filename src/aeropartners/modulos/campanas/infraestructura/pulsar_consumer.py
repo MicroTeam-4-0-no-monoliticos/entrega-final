@@ -62,8 +62,6 @@ class PulsarCampanasConsumer:
                 subscription_name=self.subscription_name,
                 consumer_type=self.subscription_type,
                 consumer_name=f"{self.service_name}-consumer-{uuid.uuid4().hex[:8]}",
-                ack_timeout_millis=self.ack_timeout_millis,
-                negative_ack_redelivery_delay_millis=self.negative_ack_redelivery_delay_millis,
                 dead_letter_policy=dlq_policy,
                 initial_position=pulsar.InitialPosition.Earliest
             )

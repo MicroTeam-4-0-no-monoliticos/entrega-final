@@ -351,6 +351,31 @@ services:
       - "9002:8000"
     restart: always
 
+  # SAGA Orchestrator
+  saga-orchestrator:
+    build: ./saga-orchestrator
+    container_name: saga-orchestrator
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/aeropartners
+      PULSAR_URL: pulsar://pulsar:6650
+      PORT: 8091
+    ports:
+      - "8091:8091"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      pulsar:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8091/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
 volumes:
   postgres_data:
   pulsar_data:

@@ -23,8 +23,8 @@ class StripeAdapter(PasarelaDePagos):
         """
         time.sleep(random.uniform(2.0, 8.0))
         
-        # Simular éxito/fallo aleatorio (90% éxito, 10% fallo)
-        if random.random() < 0.9:
+        # Simular éxito/fallo aleatorio (50% éxito, 50% fallo)
+        if random.random() < 0.5:
             return ResultadoPago(
                 exitoso=True,
                 referencia_transaccion=f"txn_{random.randint(100000, 999999)}"
@@ -125,6 +125,41 @@ class RepositorioPagosSQLAlchemy(RepositorioPagos):
             raise e
         finally:
             db.close()
+    
+    def obtener_todos(self):
+        """Obtener todos los pagos"""
+        db = SessionLocal()
+        try:
+            modelos = db.query(PagoModel).all()
+            pagos = []
+            for modelo in modelos:
+                pago = self._reconstruir_pago(modelo)
+                pagos.append(pago)
+            return pagos
+        except Exception as e:
+            db.rollback()
+            raise e
+        finally:
+            db.close()
+    
+    def _reconstruir_pago(self, modelo: PagoModel) -> Pago:
+        """Reconstruir entidad Pago desde el modelo de base de datos"""
+        from ..dominio.objetos_valor import Dinero, Moneda
+        from ..dominio.enums import EstadoPago
+        
+        pago = Pago(
+            id_afiliado=modelo.id_afiliado,
+            monto=Dinero(modelo.monto, Moneda(modelo.moneda)),
+            referencia_pago=modelo.referencia_pago
+        )
+        pago.id = modelo.id
+        pago.estado = EstadoPago(modelo.estado)
+        pago.fecha_creacion = modelo.fecha_creacion
+        pago.fecha_actualizacion = modelo.fecha_actualizacion
+        pago.fecha_procesamiento = modelo.fecha_procesamiento
+        pago.mensaje_error = modelo.mensaje_error
+        
+        return pago
     
     def _serializar_evento(self, evento) -> str:
         """Serializa un evento de dominio a JSON"""

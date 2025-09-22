@@ -20,3 +20,9 @@ class ProcesarPagoCommand(Comando):
             Moneda(self.moneda)
         except ValueError:
             raise ValueError(f"Moneda no válida: {self.moneda}")
+
+@dataclass
+class RevertirPagoCommand(Comando):
+    id_pago: uuid.UUID
+    motivo: str
+    saga_id: Optional[str] = None

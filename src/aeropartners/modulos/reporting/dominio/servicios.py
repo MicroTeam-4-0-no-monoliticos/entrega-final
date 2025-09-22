@@ -4,6 +4,7 @@ Servicios del dominio para el módulo de Reporting
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional
 from datetime import datetime
+import uuid
 
 from .entidades import Reporte, ConfiguracionServicioDatos
 from .objetos_valor import FiltrosReporte, URLServicioDatos
@@ -85,6 +86,47 @@ class GeneradorReporteService:
             metadatos={
                 'filtros_aplicados': filtros.to_dict(),
                 'fecha_generacion': datetime.utcnow().isoformat()
+            },
+            version_servicio_datos="unknown"
+        )
+    
+    async def generar_reporte_campana_completa(self, filtros: FiltrosReporte) -> Reporte:
+        """Genera un reporte completo de campaña para SAGAs"""
+        # Obtener datos de campañas y pagos
+        datos_campanas = await self.servicio_datos.obtener_datos_campanas(filtros)
+        datos_pagos = await self.servicio_datos.obtener_datos_pagos(filtros)
+        
+        # Combinar datos para reporte completo
+        # El servicio de datos v1 devuelve estructura diferente:
+        # - Campañas: {"campanas": [...], "total_campanas": 2}
+        # - Pagos: {"total_eventos": 15, "eventos_procesados": 12, ...}
+        datos_completos = {
+            'campanas': datos_campanas.get('campanas', []),
+            'pagos': [],  # El servicio v1 no devuelve array de pagos
+            'estadisticas_pagos': {
+                'total_eventos': datos_pagos.get('total_eventos', 0),
+                'eventos_procesados': datos_pagos.get('eventos_procesados', 0),
+                'eventos_pendientes': datos_pagos.get('eventos_pendientes', 0),
+                'eventos_fallidos': datos_pagos.get('eventos_fallidos', 0)
+            },
+            'resumen': {
+                'total_campanas': len(datos_campanas.get('campanas', [])),
+                'total_pagos': 0,  # No hay array de pagos en v1
+                'monto_total_pagos': 0,  # No hay datos de monto en v1
+                'campanas_activas': len([c for c in datos_campanas.get('campanas', []) if c.get('estado') == 'activa']),
+                'pagos_exitosos': datos_pagos.get('eventos_procesados', 0)
+            }
+        }
+        
+        return Reporte(
+            id=str(uuid.uuid4()),
+            tipo="CAMPAÑA_COMPLETA",
+            fecha_generacion=datetime.utcnow(),
+            datos=datos_completos,
+            metadatos={
+                'filtros_aplicados': filtros.to_dict(),
+                'fecha_generacion': datetime.utcnow().isoformat(),
+                'tipo_saga': 'CREAR_CAMPANA_COMPLETA'
             },
             version_servicio_datos="unknown"
         )

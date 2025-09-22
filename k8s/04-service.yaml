@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: aeropartners-service
+  namespace: aeropartners
+  labels:
+    app: aeropartners
+spec:
+  type: LoadBalancer
+  ports:
+    - name: main-api
+      port: 8000
+      targetPort: 8000
+      protocol: TCP
+    - name: campaigns-proxy
+      port: 8001
+      targetPort: 8001
+      protocol: TCP
+    - name: payments-api
+      port: 8002
+      targetPort: 8002
+      protocol: TCP
+    - name: reporting-api
+      port: 8003
+      targetPort: 8003
+      protocol: TCP
+  selector:
+    app: aeropartners

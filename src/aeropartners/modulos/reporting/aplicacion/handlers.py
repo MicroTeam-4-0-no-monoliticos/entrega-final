@@ -64,6 +64,9 @@ class GenerarReporteHandler:
                 reporte = await generador_service.generar_reporte_campanas(filtros)
             elif command.tipo_reporte == "metricas_generales":
                 reporte = await generador_service.generar_reporte_metricas(filtros)
+            elif command.tipo_reporte == "CAMPAÑA_COMPLETA":
+                # Reporte completo de campaña para SAGAs
+                reporte = await generador_service.generar_reporte_campana_completa(filtros)
             else:
                 raise ValueError(f"Tipo de reporte no soportado: {command.tipo_reporte}")
             

@@ -5,3 +5,4 @@ class EstadoPago(Enum):
     PROCESANDO = "PROCESANDO"
     EXITOSO = "EXITOSO"
     FALLIDO = "FALLIDO"
+    REVERSADO = "REVERSADO"

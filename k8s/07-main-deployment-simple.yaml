@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aeropartners-deployment
+  namespace: aeropartners
+  labels:
+    app: aeropartners
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: aeropartners
+  template:
+    metadata:
+      labels:
+        app: aeropartners
+    spec:
+      containers:
+      # Aplicación principal
+      - name: aeropartners-main
+        image: us-central1-docker.pkg.dev/aeropartners-saga-dev/uniandes-misw4406/aeropartners-main:1.4
+        ports:
+        - containerPort: 8000
+          name: main-api
+        - containerPort: 8000
+          name: campaigns-svc
+        - containerPort: 8000
+          name: campaigns-svc-replica
+        - containerPort: 8000
+          name: event-collector-bff
+        - containerPort: 8000
+          name: saga-orchestrator
+        - containerPort: 8000
+          name: servicio-datos-v1
+        - containerPort: 8000
+          name: servicio-datos-v2
+        envFrom:
+        - configMapRef:
+            name: aeropartners-config
+        - secretRef:
+            name: aeropartners-secret
+        command: ["sh", "-c"]
+        args:
+          - |
+            echo 'Esperando a que los servicios estén listos...' &&
+            sleep 15 &&
+            echo 'Iniciando aplicación principal...' &&
+            python -m uvicorn src.aeropartners.main:app --host 0.0.0.0 --port 8000
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5

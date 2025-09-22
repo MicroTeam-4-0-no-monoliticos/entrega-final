@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: aeropartners-service
+  namespace: aeropartners
+  labels:
+    app: aeropartners
+spec:
+  type: LoadBalancer
+  ports:
+    # Aplicación principal
+    - name: main-api
+      port: 8000
+      targetPort: 8000
+      protocol: TCP
+    # Servicios de campañas
+    - name: campaigns-svc
+      port: 8001
+      targetPort: 8000
+      protocol: TCP
+    - name: campaigns-svc-replica
+      port: 8002
+      targetPort: 8000
+      protocol: TCP
+    # Proxy de campañas
+    - name: campaigns-proxy
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
+    # Event Collector BFF
+    - name: event-collector-bff
+      port: 8090
+      targetPort: 8080
+      protocol: TCP
+    # SAGA Orchestrator
+    - name: saga-orchestrator
+      port: 8091
+      targetPort: 8091
+      protocol: TCP
+    # Servicios de datos
+    - name: servicio-datos-v1
+      port: 9001
+      targetPort: 8000
+      protocol: TCP
+    - name: servicio-datos-v2
+      port: 9002
+      targetPort: 8000
+      protocol: TCP
+  selector:
+    app: aeropartners

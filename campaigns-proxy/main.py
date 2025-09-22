@@ -4,17 +4,27 @@ from typing import Optional
 from datetime import datetime
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 import httpx
 import uvicorn
 
 PRIMARY = os.getenv("PRIMARY_SERVICE_URL", "http://campaigns-svc:8000").rstrip("/")
 REPLICA = os.getenv("REPLICA_SERVICE_URL", "http://campaigns-svc-replica:8000").rstrip("/")
-HEALTH_PATH = os.getenv("HEALTH_PATH", "/campaigns/healthz")  # los servicios de campañas exponen /campaigns/healthz
+HEALTH_PATH = os.getenv("HEALTH_PATH", "/campaigns/healthz")
 TIMEOUT = float(os.getenv("HEALTH_CHECK_TIMEOUT", "5"))
 INTERVAL = float(os.getenv("HEALTH_CHECK_INTERVAL", "2"))
 MAX_FAILS = int(os.getenv("MAX_CONSECUTIVE_FAILURES", "3"))
 
 app = FastAPI(title="Campaigns Proxy", version="1.0.0")
+
+# Configurar CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/")
 async def root():

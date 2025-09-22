@@ -1,0 +1,274 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: consumers-deployment
+  namespace: aeropartners
+  labels:
+    app: consumers
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: consumers
+  template:
+    metadata:
+      labels:
+        app: consumers
+    spec:
+      containers:
+      # Consumer de Campañas - Primario
+      - name: campaigns-consumer
+        image: us-central1-docker.pkg.dev/aeropartners-saga-dev/uniandes-misw4406/aeropartners-main:1.0
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: DATABASE_URL
+        - name: PULSAR_URL
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: PULSAR_URL
+        - name: PULSAR_ADMIN_URL
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: PULSAR_ADMIN_URL
+        - name: SERVICE_NAME
+          value: "campaigns-svc"
+        - name: SUBSCRIPTION_TYPE
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: SUBSCRIPTION_TYPE
+        - name: SUBSCRIPTION_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: SUBSCRIPTION_NAME
+        - name: DLQ_TOPIC
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: DLQ_TOPIC
+        - name: MAX_REDELIVER_COUNT
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: MAX_REDELIVER_COUNT
+        - name: ACK_TIMEOUT_MILLIS
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: ACK_TIMEOUT_MILLIS
+        - name: NEGATIVE_ACK_REDELIVERY_DELAY_MILLIS
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: NEGATIVE_ACK_REDELIVERY_DELAY_MILLIS
+        command: ["sh", "-c"]
+        args:
+          - |
+            echo 'Esperando a que Pulsar esté listo...' &&
+            sleep 30 &&
+            echo 'Iniciando consumer de campañas primario...' &&
+            python -c "from src.aeropartners.modulos.campanas.infraestructura.pulsar_consumer import PulsarCampanasConsumer; consumer = PulsarCampanasConsumer(); consumer.start_consuming()"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"
+
+      # Consumer de Campañas - Réplica
+      - name: campaigns-consumer-replica
+        image: us-central1-docker.pkg.dev/aeropartners-saga-dev/uniandes-misw4406/aeropartners-main:1.0
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: DATABASE_URL
+        - name: PULSAR_URL
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: PULSAR_URL
+        - name: PULSAR_ADMIN_URL
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: PULSAR_ADMIN_URL
+        - name: SERVICE_NAME
+          value: "campaigns-svc-replica"
+        - name: SUBSCRIPTION_TYPE
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: SUBSCRIPTION_TYPE
+        - name: SUBSCRIPTION_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: SUBSCRIPTION_NAME
+        - name: DLQ_TOPIC
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: DLQ_TOPIC
+        - name: MAX_REDELIVER_COUNT
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: MAX_REDELIVER_COUNT
+        - name: ACK_TIMEOUT_MILLIS
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: ACK_TIMEOUT_MILLIS
+        - name: NEGATIVE_ACK_REDELIVERY_DELAY_MILLIS
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: NEGATIVE_ACK_REDELIVERY_DELAY_MILLIS
+        command: ["sh", "-c"]
+        args:
+          - |
+            echo 'Esperando a que Pulsar esté listo...' &&
+            sleep 35 &&
+            echo 'Iniciando consumer de campañas réplica...' &&
+            python -c "from src.aeropartners.modulos.campanas.infraestructura.pulsar_consumer import PulsarCampanasConsumer; consumer = PulsarCampanasConsumer(); consumer.start_consuming()"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"
+
+      # Consumer de Pulsar (Pagos)
+      - name: pulsar-consumer
+        image: us-central1-docker.pkg.dev/aeropartners-saga-dev/uniandes-misw4406/aeropartners-main:1.0
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: DATABASE_URL
+        - name: PULSAR_URL
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: PULSAR_URL
+        - name: PULSAR_ADMIN_URL
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: PULSAR_ADMIN_URL
+        command: ["sh", "-c"]
+        args:
+          - |
+            echo 'Esperando a que Pulsar esté listo...' &&
+            sleep 25 &&
+            echo 'Iniciando consumidor de eventos de Pulsar...' &&
+            python -c "from src.aeropartners.modulos.pagos.infraestructura.pulsar_consumer import PulsarEventConsumer; consumer = PulsarEventConsumer(); consumer.start_consuming()"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"
+
+      # Procesador de Outbox - Campañas
+      - name: campaigns-outbox-processor
+        image: us-central1-docker.pkg.dev/aeropartners-saga-dev/uniandes-misw4406/aeropartners-main:1.0
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: DATABASE_URL
+        - name: PULSAR_URL
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: PULSAR_URL
+        - name: PULSAR_ADMIN_URL
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: PULSAR_ADMIN_URL
+        command: ["sh", "-c"]
+        args:
+          - |
+            echo 'Esperando a que los servicios estén listos...' &&
+            sleep 25 &&
+            echo 'Iniciando procesador de outbox de campañas...' &&
+            python -c "import time; from src.aeropartners.modulos.campanas.infraestructura.outbox import OutboxCampanasProcessor; processor = OutboxCampanasProcessor(); [print(f'Procesados {processor.procesar_eventos_pendientes()} eventos del outbox de campañas a Pulsar') or time.sleep(30) for _ in iter(int, 1)]"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"
+
+      # Procesador de Outbox - Pagos
+      - name: outbox-processor
+        image: us-central1-docker.pkg.dev/aeropartners-saga-dev/uniandes-misw4406/aeropartners-main:1.0
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: DATABASE_URL
+        - name: PULSAR_URL
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: PULSAR_URL
+        - name: PULSAR_ADMIN_URL
+          valueFrom:
+            configMapKeyRef:
+              name: aeropartners-config
+              key: PULSAR_ADMIN_URL
+        command: ["sh", "-c"]
+        args:
+          - |
+            echo 'Esperando a que los servicios estén listos...' &&
+            sleep 20 &&
+            echo 'Iniciando procesador de outbox con Pulsar...' &&
+            python -c "import time; from src.aeropartners.modulos.pagos.infraestructura.outbox import PulsarOutboxProcessor; processor = PulsarOutboxProcessor(); [print(f'Procesados {processor.procesar_eventos_pendientes()} eventos del outbox a Pulsar') or time.sleep(30) for _ in iter(int, 1)]"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"
+
+      # Consumer de SAGAs
+      - name: saga-consumer
+        image: us-central1-docker.pkg.dev/aeropartners-saga-dev/uniandes-misw4406/aeropartners-main:1.9
+        envFrom:
+        - configMapRef:
+            name: aeropartners-config
+        - secretRef:
+            name: aeropartners-secret
+        command: ["sh", "-c"]
+        args:
+          - |
+            echo 'Esperando a que Pulsar esté listo...' &&
+            sleep 30 &&
+            echo 'Iniciando consumer de SAGAs...' &&
+            python -c "from src.aeropartners.modulos.saga.infraestructura.pulsar_consumer import SagaPulsarConsumer; consumer = SagaPulsarConsumer(); consumer.start_consuming()"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"
